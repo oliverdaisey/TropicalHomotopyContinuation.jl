@@ -1,7 +1,13 @@
-mutable struct Support
+export vector_of_points
+
+struct Support
 
     entries::Dict{Point, Weight}
 
+end
+
+function entries(s::Support)
+    return s.entries
 end
 
 function support(points, weights)::Support
@@ -12,18 +18,28 @@ function support(points, weights)::Support
 end
 
 function points(s::Support)
-    return keys(s.entries)
+    return keys(entries(s))
 end
 
 function weights(s::Support)
-    return values(s.entries)
+    return values(entries(s))
 end
 
 function Base.show(io::IO, s::Support)
-    print(io, "Dual support with points $(join(points(s), ", ")) and weights $(join(weights(s), ", "))")
+
+    print(io, "Dual support $(join(["$(p)↑$(w)" for (p, w) in s.entries], ", "))")
 end
 
-function update_weight(s::Support, p::Point, w::Weight)
-    @assert haskey(s.entries, p) "The point $p is not in the support"
+function update_weight!(s::Support, p::Point, w::Weight)
+    @assert haskey(entries(s), p) "The point $p is not in the support"
     s.entries[p] = w
+end
+
+"""
+    vector_of_points(s::Support)
+
+Convenience function to return the points of a support as a vector.
+"""
+function vector_of_points(s::Support)
+    return collect(points(s))
 end
