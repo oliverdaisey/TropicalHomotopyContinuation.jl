@@ -1,4 +1,4 @@
-export vector_of_points
+export vector_of_points, points
 
 struct Support
 
@@ -18,11 +18,11 @@ function support(points, weights)::Support
 end
 
 function points(s::Support)
-    return keys(entries(s))
+    return collect(keys(entries(s)))
 end
 
 function weights(s::Support)
-    return values(entries(s))
+    return collect(values(entries(s)))
 end
 
 function Base.show(io::IO, s::Support)

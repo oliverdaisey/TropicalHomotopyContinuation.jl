@@ -7,14 +7,15 @@ include("structs/support.jl")
 include("structs/mixed_support.jl")
 
 # Write your package code here.
-myPoint = point(3,4)
-mySecondPoint = point(5,6)
-myWeight = weight(3)
-mySecondWeight = weight(4)
+pts = [point(0,0), point(1,0), point(0,1), point(1,1)]
+wts = [weight(0), weight(1), weight(0), weight(2)]
 
-mySupport = support((myPoint, mySecondPoint), (myWeight, mySecondWeight))
+mySupport = support(pts, wts)
 
-mySecondSupport = support((point(10,11), point(12,13)), (weight(5), weight(6)))
+pts = [point(0,0), point(2,0), point(2,2)]
+wts = [weight(0), weight(0), weight(0)]
+
+mySecondSupport = support(pts, wts)
 
 mixedSupport = mixed_support((mySupport, mySecondSupport))
 

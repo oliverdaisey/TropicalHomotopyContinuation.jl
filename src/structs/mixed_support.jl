@@ -1,5 +1,5 @@
 using Oscar
-export MixedSupport, vector_of_points, cayley_embedding
+export MixedSupport, vector_of_points, cayley_embedding, mixed_subdivision, supports
 
 mutable struct MixedSupport
 
@@ -41,4 +41,17 @@ Convenience function to return the points of a mixed support as a vector.
 """
 function vector_of_points(Δ::MixedSupport)
     return [p for s in supports(Δ) for p in points(s)]
+end
+
+"""
+    mixed_subdivision(Δ::MixedSupport)
+
+Computes the mixed subdivision corresponding to the mixed support Δ.
+"""
+function mixed_subdivision(Δ::MixedSupport)
+    minkowskiSum = minkowski_sum(points.(supports(Δ))...)
+    mixedWeights = minkowski_sum(weights.(supports(Δ))...)
+
+    subdivision = subdivision_of_points(convert.(Vector{Int}, minkowskiSum), convert.(QQFieldElem, mixedWeights))
+    return subdivision
 end
