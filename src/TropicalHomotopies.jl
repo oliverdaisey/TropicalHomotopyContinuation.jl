@@ -4,7 +4,7 @@ using Oscar
 include("structs/point.jl")
 include("structs/weight.jl")
 include("structs/support.jl")
-include("structs/mixed_subdivision.jl")
+include("structs/mixed_support.jl")
 
 # Write your package code here.
 myPoint = point(3,4)
@@ -16,8 +16,8 @@ mySupport = support((myPoint, mySecondPoint), (myWeight, mySecondWeight))
 
 mySecondSupport = support((point(10,11), point(12,13)), (weight(5), weight(6)))
 
-myMixedSubdivision = mixed_subdivision((mySupport, mySecondSupport))
+mixedSupport = mixed_support((mySupport, mySecondSupport))
 
-export myMixedSubdivision
+export mixedSupport
 
 end

@@ -1,0 +1,44 @@
+using Oscar
+export MixedSupport, vector_of_points, cayley_embedding
+
+mutable struct MixedSupport
+
+    supports::Tuple{Vararg{Support}} # collection of supports
+
+end
+
+function mixed_support(S::Tuple{Vararg{Support}})::MixedSupport
+    return MixedSupport(S)
+end
+
+function supports(Δ::MixedSupport)::Tuple{Vararg{Support}}
+    return Δ.supports
+end
+
+function Base.show(io::IO, Δ::MixedSupport)
+
+    print(io, "Mixed support involving $(length(supports(Δ))) point supports")
+end
+
+function cayley_embedding(Δ::MixedSupport)
+    ptConfigurations = Vector{Vector{Int}}[vector_of_points(S) for S in supports(Δ)]
+    numOfConfigurations = length(ptConfigurations)
+
+    for (i,ptConfiguration) in enumerate(ptConfigurations)
+        padding = zeros(Int, numOfConfigurations)
+        padding[i] = 1
+        ptConfigurations[i] = vcat.(ptConfiguration..., Ref(padding))
+    end
+
+    return hcat(vcat(ptConfigurations...)...)
+    
+end
+
+"""
+    vector_of_points(Δ::MixedSupport)
+
+Convenience function to return the points of a mixed support as a vector.
+"""
+function vector_of_points(Δ::MixedSupport)
+    return [p for s in supports(Δ) for p in points(s)]
+end
