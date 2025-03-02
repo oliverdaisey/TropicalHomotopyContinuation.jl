@@ -75,6 +75,8 @@ function tropical_intersection_point_and_drift(T::Tracker)::Union{Nothing, Tuple
     σ = active_support(T)
     Δ = ambient_support(T)
 
+    diff = direction(T)
+
     rows = Vector{Int}[]
     weights = QQFieldElem[]
     dir = QQFieldElem[]
@@ -91,7 +93,7 @@ function tropical_intersection_point_and_drift(T::Tracker)::Union{Nothing, Tuple
                 println("The difference of weights is $(Δ[p] - Δ[p1])")
                 println("The direction at p is $(target(T)[p] - Δ[p])")
                 println("The current weight is $(Δ[p])")
-                push!(dir, target(T)[p] - Δ[p])
+                push!(dir, direction(T)[p] - direction(T)[p1])
             end
         end
     end

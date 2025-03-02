@@ -39,7 +39,7 @@ polymakePolyhedron = convert(Polyhedron, mixed_cell_cone(candidate, mixedSupport
 
 display(Oscar.dim(polymakePolyhedron))
 
-targetSupport = mixed_support((support([p1,p2,p3,p4], [weight(0), weight(1), weight(0), weight(2)]), support([p5,p6,p7], [weight(0), weight(0), weight(0)])))
+targetSupport = mixed_support((support([p1,p2,p3,p4], [weight(1), weight(0), weight(0), weight(0)]), support([p5,p6,p7], [weight(2), weight(1), weight(0)])))
 
 T = tracker(mixedSupport, candidate, targetSupport)
 
@@ -48,12 +48,5 @@ pt, drift = tropical_intersection_point_and_drift(T)
 println("pt = ", pt)
 
 println("tropical drift = ", drift)
-
-v = direction(T)
-τ = target(T)
-
-chosenPoint = p5
-println("chosenPoint has weight $(mixedSupport[chosenPoint]) and target weight $(τ[chosenPoint])")
-println(v[chosenPoint])
 
 end
