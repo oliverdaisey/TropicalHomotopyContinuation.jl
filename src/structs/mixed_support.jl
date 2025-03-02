@@ -51,6 +51,9 @@ function mixed_subdivision(Δ::MixedSupport)
     minkowskiSum = minkowski_sum(points.(supports(Δ))...)
     mixedWeights = minkowski_sum(weights.(supports(Δ))...)
 
+    println("points: ", points.(supports(Δ)))
+    println("weights: ", weights.(supports(Δ)))
+
     println("minkowskiSum: ", minkowskiSum)
     println("mixedWeights: ", mixedWeights)
 

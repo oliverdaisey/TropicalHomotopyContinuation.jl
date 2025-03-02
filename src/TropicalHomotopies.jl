@@ -49,4 +49,6 @@ println("pt = ", pt)
 
 println("tropical drift = ", drift)
 
+sop = mixed_subdivision(mixedSupport)
+
 end

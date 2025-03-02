@@ -138,7 +138,7 @@ function Base.in(Δ::MixedSupport, C::MixedCellCone)
 
     dotProducts = []
     for κ in facets(C)
-        push!(dotProducts, sum([circuit(κ)[p] * Δ[p] for p in pts if p in keys(circuit(κ))]))
+        push!(dotProducts, sum([QQ(circuit(κ)[p]) * QQ(Δ[p]) for p in pts if p in keys(circuit(κ))]))
     end
 
     return all(dotProducts .< 0)

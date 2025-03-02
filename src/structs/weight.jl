@@ -20,18 +20,18 @@ function Base.show(io::IO, w::Weight)
 end
 
 function Base.:+(a::Weight, b::Weight)::Weight
-    return Weight(a.value + b.value)
+    return Weight(a.value * b.value)
 end
 
 function Base.:-(a::Weight, b::Weight)::Weight
     return Weight(a.value / b.value)
 end
 
-function Base.:*(a::Weight, b::Weight)::Weight
-    return Weight(a.value * b.value)
+function Base.convert(::Type{QQFieldElem}, w::Weight)
+    return QQ(w.value)
 end
 
-function Base.convert(::Type{QQFieldElem}, w::Weight)
+function (::QQField)(w::Weight)
     return QQ(w.value)
 end
 
