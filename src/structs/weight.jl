@@ -23,6 +23,10 @@ function Base.:+(a::Weight, b::Weight)::Weight
     return Weight(a.value + b.value)
 end
 
+function Base.:-(a::Weight, b::Weight)::Weight
+    return Weight(a.value / b.value)
+end
+
 function Base.:*(a::Weight, b::Weight)::Weight
     return Weight(a.value * b.value)
 end

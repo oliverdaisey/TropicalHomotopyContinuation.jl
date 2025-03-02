@@ -54,6 +54,10 @@ function Base.:+(a::Point, b::Point)::Point
     return Point(a.entries .+ b.entries)
 end
 
+function Base.:-(a::Point, b::Point)::Point
+    return Point(a.entries .- b.entries)
+end
+
 """
     minkowski_sum(args...)
 

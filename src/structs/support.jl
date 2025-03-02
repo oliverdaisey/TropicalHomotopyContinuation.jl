@@ -35,6 +35,13 @@ function Base.show(io::IO, s::Support)
     print(io, "Dual support $(join(["$(p)↑$(w)" for (p, w) in s.entries], ", "))")
 end
 
+function Base.:-(s::Support, t::Support)::Support
+
+    @assert length(points(s)) == length(points(t)) "The number of points in the supports must be the same"
+    return Support(mergewith(-)(entries(s), entries(t)))
+    
+end
+
 """
     update_weight!(s::Support, p::Point, w::Weight)
 

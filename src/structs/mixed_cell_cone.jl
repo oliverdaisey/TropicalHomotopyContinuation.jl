@@ -124,6 +124,10 @@ function mixed_cell_cone(candidate::MixedSupport, ambientSupport::MixedSupport):
     return mixed_cell_cone(ambientSupport, facets)
 end
 
+function mixed_cell_cone(T::Tracker)::MixedCellCone
+    return mixed_cell_cone(candidate(T), ambient_support(T))
+end
+
 """
     in(Δ::MixedSupport, C::MixedCellCone)
 
