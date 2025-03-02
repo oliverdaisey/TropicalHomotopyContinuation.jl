@@ -1,6 +1,5 @@
 module TropicalHomotopies
 
-using Oscar
 include("structs/point.jl")
 include("structs/weight.jl")
 include("structs/support.jl")
@@ -9,28 +8,34 @@ include("structs/cayley_embedding.jl")
 include("structs/mixed_cell_cone.jl")
 
 # Write your package code here.
-pts = [point(0,0), point(1,0), point(0,1), point(1,1)]
-wts = [weight(0), weight(1), weight(0), weight(2)]
+p1 = point(0,0)
+p2 = point(1,0)
+p3 = point(0,1)
+p4 = point(1,1)
 
-mySupport = support(pts, wts)
+p5=point(0,0)
+p6=point(2,0)
+p7=point(2,2)
 
-pts = [point(0,0), point(2,0), point(2,2)]
-wts = [weight(0), weight(0), weight(0)]
-
-mySecondSupport = support(pts, wts)
-
-display(mySupport)
-display(mySecondSupport)
+mySupport = support([p1,p2,p3,p4], [weight(0), weight(1), weight(0), weight(2)])
+mySecondSupport = support([p5,p6,p7], [weight(0), weight(0), weight(0)])
 
 mixedSupport = mixed_support((mySupport, mySecondSupport))
 
-display(mixedSupport)
-
 cayley = cayley_embedding(mixedSupport)
 
-println("Constructed cayley embedding")
-display(matrix(cayley))
+candidate = mixed_support((support([p1,p2], [weight(0), weight(1)]), support([p5,p6], [weight(0), weight(1)])))
 
-# submatrix = cayley[mySecondSupport]
+C = mixed_cell_cone(candidate, mixedSupport)
+
+for facet in facets(C)
+    println(facet)
+end
+
+println(candidate in mixed_cell_cone(candidate, mixedSupport))
+
+polymakePolyhedron = convert(Polyhedron, mixed_cell_cone(candidate, mixedSupport))
+
+display(Oscar.dim(polymakePolyhedron))
 
 end
