@@ -113,9 +113,10 @@ function mixed_cell_cone(candidate::MixedSupport, ambientSupport::MixedSupport):
         
         # circuit has enties all zero except for nontrivialEntries
         circuit = Dict{Point, Weight}()
-        for (point, value) in zip(points(candidate), nontrivialEntries)
-            circuit[point] = weight(value)
+        for point in points(candidate)
+            circuit[point] = weight(nontrivialEntries[findfirst(x -> x == p, points(newMixedSupport))])
         end
+        circuit[p] = weight(nontrivialEntries[findfirst(x -> x == p, points(newMixedSupport))])
 
         push!(facets, mixed_cell_cone_facet(circuit, p))
 

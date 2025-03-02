@@ -27,12 +27,6 @@ cayley = cayley_embedding(mixedSupport)
 
 candidate = mixed_support((support([p1,p2], [weight(0), weight(0)]), support([p6,p7], [weight(1), weight(0)])))
 
-C = mixed_cell_cone(candidate, mixedSupport)
-
-for facet in facets(C)
-    println(facet)
-end
-
 println(candidate in mixed_cell_cone(candidate, mixedSupport))
 
 polymakePolyhedron = convert(Polyhedron, mixed_cell_cone(candidate, mixedSupport))
