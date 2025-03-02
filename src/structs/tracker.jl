@@ -86,13 +86,6 @@ function tropical_intersection_point_and_drift(T::Tracker)::Union{Nothing, Tuple
             if !isequal(p1, p)
                 push!(rows, p1 - p)
                 push!(weights, Δ[p] - Δ[p1])
-
-                println("----------")
-                println("Pushing a row corresponing to p1 = $p1 and p = $p")
-                println("The row is $(p1 - p)")
-                println("The difference of weights is $(Δ[p] - Δ[p1])")
-                println("The direction at p is $(target(T)[p] - Δ[p])")
-                println("The current weight is $(Δ[p])")
                 push!(dir, direction(T)[p] - direction(T)[p1])
             end
         end
