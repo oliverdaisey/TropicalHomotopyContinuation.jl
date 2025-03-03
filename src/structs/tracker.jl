@@ -75,8 +75,6 @@ function tropical_intersection_point_and_drift(T::Tracker)::Union{Nothing, Tuple
     σ = active_support(T)
     Δ = ambient_support(T)
 
-    diff = direction(T)
-
     rows = Vector{Int}[]
     weights = QQFieldElem[]
     dir = QQFieldElem[]

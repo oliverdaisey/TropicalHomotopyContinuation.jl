@@ -7,6 +7,7 @@ include("structs/mixed_support.jl")
 include("structs/tracker.jl")
 include("structs/cayley_embedding.jl")
 include("structs/mixed_cell_cone.jl")
+include("jensen_move.jl")
 
 # Write your package code here.
 p1 = point(0,0)
@@ -33,7 +34,7 @@ polymakePolyhedron = convert(Polyhedron, mixed_cell_cone(candidate, mixedSupport
 
 display(Oscar.dim(polymakePolyhedron))
 
-targetSupport = mixed_support((support([p1,p2,p3,p4], [weight(1), weight(0), weight(0), weight(0)]), support([p5,p6,p7], [weight(2), weight(1), weight(0)])))
+targetSupport = mixed_support((support([p1,p2,p3,p4], [weight(0), weight(0), weight(0), weight(0)]), support([p5,p6,p7], [weight(2), weight(1//2), weight(0)])))
 
 T = tracker(mixedSupport, candidate, targetSupport)
 

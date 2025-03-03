@@ -11,11 +11,11 @@ end
 Construct the Cayley embedding of a mixed support `Δ`.
 """
 function cayley_embedding(Δ::MixedSupport)::CayleyEmbedding
-    
+
     dim = length(first(first(vector_of_points(Δ))))
 
     return CayleyEmbedding(Δ, dim)
-    
+
 end
 
 function Base.show(io::IO, cayley::CayleyEmbedding)
@@ -32,7 +32,7 @@ function matrix(Δ::MixedSupport)
     ptConfigurations = Vector{Vector{Int}}[vector_of_points(S) for S in supports(Δ)]
     numOfConfigurations = length(ptConfigurations)
 
-    for (i,ptConfiguration) in enumerate(ptConfigurations)
+    for (i, ptConfiguration) in enumerate(ptConfigurations)
         padding = zeros(Int, numOfConfigurations)
         padding[i] = 1
         ptConfigurations[i] = vcat.(ptConfiguration, Ref(padding))
@@ -47,7 +47,7 @@ end
 Return the matrix representation of the Cayley embedding.
 """
 function matrix(cayley::CayleyEmbedding)
-    
+
     return matrix(supports(cayley))
 
 end
@@ -87,7 +87,7 @@ Given a mixed support where each support is a subset of the supports of `cayley`
 function Base.getindex(cayley::CayleyEmbedding, indices::MixedSupport)
 
     @assert is_subset(indices, supports(cayley)) "The indices must be a subset of the supports of the Cayley embedding (got $indices, not a subset of $(supports(cayley)))"
-    
+
     return matrix(indices)
 
 end
