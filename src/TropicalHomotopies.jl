@@ -1,7 +1,7 @@
 module TropicalHomotopies
 
 include("structs/point.jl")
-include("structs/weight.jl")
+include("structs/height.jl")
 include("structs/support.jl")
 include("structs/mixed_support.jl")
 include("structs/tracker.jl")
@@ -19,14 +19,14 @@ p5=point(0,0)
 p6=point(2,0)
 p7=point(2,1)
 
-mySupport = support([p1,p2,p3,p4], [weight(0), weight(0), weight(0), weight(0)])
-mySecondSupport = support([p5,p6,p7], [weight(2), weight(1), weight(0)])
+mySupport = support([p1,p2,p3,p4], [height(0), height(0), height(0), height(0)])
+mySecondSupport = support([p5,p6,p7], [height(2), height(1), height(0)])
 
 mixedSupport = mixed_support((mySupport, mySecondSupport))
 
 cayley = cayley_embedding(mixedSupport)
 
-candidate = mixed_support((support([p1,p2], [weight(0), weight(0)]), support([p6,p7], [weight(1), weight(0)])))
+candidate = mixed_support((support([p1,p2], [height(0), height(0)]), support([p6,p7], [height(1), height(0)])))
 
 println(candidate in mixed_cell_cone(candidate, mixedSupport))
 
@@ -34,9 +34,9 @@ polymakePolyhedron = convert(Polyhedron, mixed_cell_cone(candidate, mixedSupport
 
 display(Oscar.dim(polymakePolyhedron))
 
-targetSupport = mixed_support((support([p1,p2,p3,p4], [weight(0), weight(0), weight(0), weight(0)]), support([p5,p6,p7], [weight(2), weight(1//2), weight(0)])))
+targetSupport = mixed_support((support([p1,p2,p3,p4], [height(0), height(0), height(0), height(0)]), support([p5,p6,p7], [height(2), height(1//2), height(0)])))
 
-T = tracker(mixedSupport, candidate, targetSupport)
+T = tracker(mixedSupport, candidate, [targetSupport])
 
 pt, drift = tropical_intersection_point_and_drift(T)
 

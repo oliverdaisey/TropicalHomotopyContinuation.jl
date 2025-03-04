@@ -7,7 +7,7 @@ A facet of a mixed cell cone defined by `circuit` that involves the extra point 
 """
 struct MixedCellConeFacet
 
-    circuit::Dict{Point, Weight}
+    circuit::Dict{Point, Height}
     point::Point
 
 end
@@ -62,11 +62,11 @@ function mixed_cell_cone(ambientSupport::MixedSupport, facets::AbstractVector{Mi
 end
 
 """
-    mixed_cell_cone_facet(circuit::Dict{Point, Weight})::MixedCellConeFacet
+    mixed_cell_cone_facet(circuit::Dict{Point, height})::MixedCellConeFacet
 
 Construct a mixed cell cone facet from `circuit` using the extra point `p`. These are the nontrivial entries of the defining linear functional of the facet.
 """
-function mixed_cell_cone_facet(circuit::Dict{Point, Weight}, p::Point)::MixedCellConeFacet
+function mixed_cell_cone_facet(circuit::Dict{Point, Height}, p::Point)::MixedCellConeFacet
     return MixedCellConeFacet(circuit, p)
 end
 
@@ -112,11 +112,11 @@ function mixed_cell_cone(candidate::MixedSupport, ambientSupport::MixedSupport):
         end
         
         # circuit has enties all zero except for nontrivialEntries
-        circuit = Dict{Point, Weight}()
+        circuit = Dict{Point, Height}()
         for point in points(candidate)
-            circuit[point] = weight(nontrivialEntries[findfirst(x -> x == p, points(newMixedSupport))])
+            circuit[point] = height(nontrivialEntries[findfirst(x -> x == p, points(newMixedSupport))])
         end
-        circuit[p] = weight(nontrivialEntries[findfirst(x -> x == p, points(newMixedSupport))])
+        circuit[p] = height(nontrivialEntries[findfirst(x -> x == p, points(newMixedSupport))])
 
         push!(facets, mixed_cell_cone_facet(circuit, p))
 
@@ -132,7 +132,7 @@ end
 """
     in(Δ::MixedSupport, C::MixedCellCone)
 
-Tests whether the weights in `Δ` are in the mixed cell cone `C`.
+Tests whether the heights in `Δ` are in the mixed cell cone `C`.
 """
 function Base.in(Δ::MixedSupport, C::MixedCellCone)
     pts = points(Δ)

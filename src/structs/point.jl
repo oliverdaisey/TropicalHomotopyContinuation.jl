@@ -38,7 +38,7 @@ Base.length(p::Point) =length(p.entries)
 
 Convert a point to a vector.
 """
-function Base.convert(Vector, p::Point)
+function Base.convert(::Any, p::Point)
     return collect(p.entries)
 end
 

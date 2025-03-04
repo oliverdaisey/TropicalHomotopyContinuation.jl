@@ -8,17 +8,17 @@ mutable struct Tracker
 
     ambientSupport::MixedSupport
     activeSupport::MixedSupport
-    target::MixedSupport
+    targets::Vector{MixedSupport}
 
 end
 
 """
-    tracker(ambientSupport::MixedSupport, activeSupport::MixedSupport, target::MixedSupport)::Tracker
+    tracker(ambientSupport::MixedSupport, activeSupport::MixedSupport, targets::MixedSupport)::Tracker
 
 Construct a tracker for a mixed cell.
 """
-function tracker(ambientSupport::MixedSupport, activeSupport::MixedSupport, target::MixedSupport)::Tracker
-    return Tracker(ambientSupport, activeSupport, target)
+function tracker(ambientSupport::MixedSupport, activeSupport::MixedSupport, targets::Vector{MixedSupport})::Tracker
+    return Tracker(ambientSupport, activeSupport, targets)
 end
 
 """
@@ -40,12 +40,12 @@ function ambient_support(T::Tracker)
 end
 
 """
-    target(T::Tracker)
+    targets(T::Tracker)
 
-Return the target support of the tracker `T`. This is where the tracker should terminate.
+Return the targets support of the tracker `T`. This is where the tracker should terminate.
 """
-function target(T::Tracker)
-    return T.target
+function targets(T::Tracker)
+    return T.targets
 end
 
 function perturb(T::Tracker)
@@ -55,10 +55,10 @@ end
 """
     direction(T::Tracker)
 
-Return the direction of the tracker `T`. This is the difference between the target and ambient supports.
+Return the direction of the tracker `T`. This is the difference between the targets and ambient supports.
 """
 function direction(T::Tracker)
-    return target(T) - ambient_support(T)
+    return first(targets(T)) - ambient_support(T)
 end
 
 function Base.show(io::IO, T::Tracker)
@@ -76,14 +76,14 @@ function tropical_intersection_point_and_drift(T::Tracker)::Union{Nothing, Tuple
     Δ = ambient_support(T)
 
     rows = Vector{Int}[]
-    weights = QQFieldElem[]
+    heights = QQFieldElem[]
     dir = QQFieldElem[]
     for S in supports(σ)
         p1 = first(points(S))
         for p in points(S)
             if !isequal(p1, p)
                 push!(rows, p1 - p)
-                push!(weights, Δ[p] - Δ[p1])
+                push!(heights, Δ[p] - Δ[p1])
                 push!(dir, direction(T)[p] - direction(T)[p1])
             end
         end
@@ -95,6 +95,6 @@ function tropical_intersection_point_and_drift(T::Tracker)::Union{Nothing, Tuple
         return Nothing
     end
 
-    return inverse * weights, inverse * dir
+    return inverse * heights, inverse * dir
 
 end

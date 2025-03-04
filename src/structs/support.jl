@@ -3,11 +3,11 @@ export vector_of_points, points
 """
     Support
 
-A support is a collection of points with associated weights.
+A support is a collection of points with associated heights.
 """
 struct Support
 
-    entries::Dict{Point, Weight}
+    entries::Dict{Point, Height}
 
 end
 
@@ -15,18 +15,18 @@ function entries(s::Support)
     return s.entries
 end
 
-function support(points, weights)::Support
-    @assert length(points) == length(weights) "The number of points and weights must be the same"
+function support(points, heights)::Support
+    @assert length(points) == length(heights) "The number of points and heights must be the same"
     @assert all(p -> length(p) == length(points[1]), points) "All points must have the same dimension"
 
-    return Support(Dict(zip(points, weights)))
+    return Support(Dict(zip(points, heights)))
 end
 
 function points(s::Support)
     return collect(keys(entries(s)))
 end
 
-function weights(s::Support)
+function heights(s::Support)
     return collect(values(entries(s)))
 end
 
@@ -43,11 +43,11 @@ function Base.:-(s::Support, t::Support)::Support
 end
 
 """
-    update_weight!(s::Support, p::Point, w::Weight)
+    update_height!(s::Support, p::Point, w::Height)
 
-Update the weight of a point in the support.
+Update the height of a point in the support.
 """
-function update_weight!(s::Support, p::Point, w::Weight)
+function update_height!(s::Support, p::Point, w::Height)
     @assert haskey(entries(s), p) "The point $p is not in the support"
     s.entries[p] = w
 end
@@ -80,7 +80,7 @@ end
 Merges the point `p` into the support `S`.
 """
 function support(S::Support, p::Point)::Support
-    return Support(merge(Dict(p => weight(1)), entries(S)))
+    return Support(merge(Dict(p => height(1)), entries(S)))
 end
 
 function Base.getindex(s::Support, p::Point)
