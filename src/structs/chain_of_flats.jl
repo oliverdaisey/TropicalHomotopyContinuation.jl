@@ -234,7 +234,9 @@ function loopless_face(C::ChainOfFlats)
         if is_basis(matroid(C), candidateBasis)
             # Create indicator vector for the candidate basis
             v = [i ∈ candidateBasis ? 1 : 0 for i in ground_set(matroid(C))]
-            push!(looplessFaceVertices, Point(v))
+            if isnothing(findfirst(isequal(v, entries(x)) for x in looplessFaceVertices))
+                push!(looplessFaceVertices, Point(v))
+            end
         end
     end
 

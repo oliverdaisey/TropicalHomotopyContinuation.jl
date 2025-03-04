@@ -1,4 +1,4 @@
-export Point, point, minkowski_sum
+export Point, point, minkowski_sum, entries
 
 const TropicalPoint = Union{Vector{QQFieldElem}, Vector{Int}}
 
@@ -71,4 +71,8 @@ end
 
 function Base.convert(::Type{Vector{QQFieldElem}}, v::Vector{Int})
     return QQ.(v)
+end
+
+function entries(p::Point)
+    return p.entries
 end
