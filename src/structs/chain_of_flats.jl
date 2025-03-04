@@ -35,6 +35,15 @@ function matroid(C::ChainOfFlats)
 end
 
 @doc raw"""
+    matroid(F::Flat)
+
+Return the matroid that `F` is a flat of.
+"""
+function matroid(F::Flat)
+    return F.matroid
+end
+
+@doc raw"""
     basis(F::Flat)
 
 Return the basis of a flat.
@@ -106,10 +115,11 @@ function is_subsequence(sub::Vector{T}, vec::Vector{T})::Bool where T
     # Iterate through each element in sub
     for s in sub
         # Find the index of s in vec, starting after the last matched index
-        found_index = findnext(x -> x == s, vec, last_matched_index + 1)
+        found_index = findnext(x -> isequal(x,s), vec, last_matched_index + 1)
         
         # If not found, or found at an earlier index, return false
         if isnothing(found_index)
+            println("Can't find $s in $vec")
             return false
         end
         
@@ -153,4 +163,19 @@ end
 
 function Base.isempty(F::Flat)
     return isempty(basis(F))
+end
+
+function Base.isequal(F::Flat, G::Flat)
+    return basis(F) == basis(G) && matroid(F) == matroid(G)
+end
+
+function Base.isequal(C::ChainOfFlats, D::ChainOfFlats)
+    return flats(C) == flats(D) && matroid(C) == matroid(D)
+end
+
+function Base.:<(C::ChainOfFlats, D::ChainOfFlats)
+    if length(flats(C)) < length(flats(D))
+        println("C has length less than D")
+    end
+    return (length(flats(C)) < length(flats(D))) && is_subsequence(flats(C), flats(D))
 end

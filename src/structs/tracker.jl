@@ -53,6 +53,10 @@ function perturb(T::Tracker)
     # TODO: Write implementation
 end
 
+function chain_of_flats(T::Tracker)
+    return T.chainOfFlats
+end
+
 @doc raw"""
     direction(T::Tracker)
 
