@@ -8,17 +8,18 @@ mutable struct Tracker
 
     ambientSupport::MixedSupport
     activeSupport::MixedSupport
+    chainOfFlats::ChainOfFlats
     targets::Vector{MixedSupport}
 
 end
 
 @doc raw"""
-    tracker(ambientSupport::MixedSupport, activeSupport::MixedSupport, targets::MixedSupport)::Tracker
+    tracker(ambientSupport::MixedSupport, activeSupport::MixedSupport, chainOfFlats::ChainOfFlats, targets::MixedSupport)::Tracker
 
 Construct a tracker for a mixed cell.
 """
-function tracker(ambientSupport::MixedSupport, activeSupport::MixedSupport, targets::Vector{MixedSupport})::Tracker
-    return Tracker(ambientSupport, activeSupport, targets)
+function tracker(ambientSupport::MixedSupport, activeSupport::MixedSupport, chainOfFlats::ChainOfFlats, targets::Vector{MixedSupport})::Tracker
+    return Tracker(ambientSupport, activeSupport, chainOfFlats, targets)
 end
 
 @doc raw"""

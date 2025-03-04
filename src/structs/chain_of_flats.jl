@@ -50,14 +50,15 @@ Construct a chain of flats from a matroid and a vector of flats.
 """
 function chain_of_flats(M::Matroid, flats::Vector{Flat})
     # check that we have a valid chain of flats
-    @assert isempty(first(flats)) "First flat must be the empty set"
-    @assert isequal(basis(last(flats)), ground_set(M)) "Last flat must be the ground set"
+    @assert !isempty(first(flats)) "First flat cannot be the empty set"
+    @assert !isequal(basis(last(flats)), ground_set(M)) "Last flat cannot be the ground set"
     @assert is_subsequence([Set(basis(f)) for f in flats], Set.(Oscar.flats(M))) "Did not provide a valid chain of flats"
+    @assert all(length(basis(flats[i])) < length(basis(flats[i+1])) for i in 1:length(flats)-1) "Flats must be strictly increasing in length"
     
     return ChainOfFlats(M, flats)
 end
 
-function chain_of_flats(M::Matroid, flats::Vector{<:Union{Vector{Int}, Vector{}}})
+function chain_of_flats(M::Matroid, flats::Vector{Vector{Int}})
     return chain_of_flats(M, [Flat(M, Set(f)) for f in flats])
 end
 
@@ -66,9 +67,10 @@ end
 
 Construct a flat from a matroid and a basis. Raises an error if the basis is not a valid flat.
 """
-function flat(M::Matroid, basis::Union{Set{Int}, Set{}})
+function flat(M::Matroid, basis::Set{Int})
     # check that the elements of basis actually index a basis in M
     @assert basis in Set.(flats(M)) "Did not provide a valid basis for a flat"
+    @assert !isequal(basis, ground_set(M)) "Basis cannot be the ground set"
     return Flat(M, basis)
 end
 
@@ -77,7 +79,7 @@ end
 
 Construct a flat from a matroid and a basis. Raises an error if the basis is not a valid flat.
 """
-function flat(M::Matroid, basis::Union{Vector{Int}, Vector{}})
+function flat(M::Matroid, basis::Vector{Int})
     return flat(M, Set(basis))
 end
 
@@ -86,7 +88,7 @@ function Base.show(io::IO, F::Flat)
 end
 
 function Base.show(io::IO, C::ChainOfFlats)
-    print(io, "Chain of flats with $(length(flats(C))) flats")
+    print(io, "Chain of flats of length $(length(flats(C)))")
 end
 
 @doc raw"""
@@ -125,6 +127,24 @@ Return the ground set of a matroid as a set.
 """
 function ground_set(M::Matroid)
     return Set(M.groundset)
+end
+
+@doc raw"""
+    Base.length(C::ChainOfFlats)
+
+Return the length of the chain of flats `C`.
+"""
+function Base.length(C::ChainOfFlats)
+    return length(flats(C))
+end
+
+@doc raw"""
+    is_maximal(C::ChainOfFlats)
+
+Check if the chain of flats `C` is maximal.
+"""
+function is_maximal(C::ChainOfFlats) 
+    return length(C) == rank(matroid(C)) - 1
 end
 
 function Base.convert(::Set{Int}, F::Flat)

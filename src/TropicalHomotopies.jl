@@ -5,6 +5,7 @@ using Oscar
 include("structs/point.jl")
 include("structs/height.jl")
 include("structs/support.jl")
+include("structs/chain_of_flats.jl")
 include("structs/mixed_support.jl")
 include("structs/tracker.jl")
 include("structs/cayley_embedding.jl")
@@ -38,19 +39,15 @@ display(Oscar.dim(polymakePolyhedron))
 
 targetSupport = mixed_support((support([p1, p2, p3, p4], [0, 0, 0, 0]), support([p5, p6, p7], [2, 1 // 2, 0])))
 
-T = tracker(mixedSupport, candidate, [targetSupport])
+M = matroid_from_matrix_columns(Oscar.matrix(GF(3), [1 0 0; 0 1 0; 0 0 1]))
+
+chainOfFlats = chain_of_flats(M, [[1], [1,2]])
+
+T = tracker(mixedSupport, candidate, chainOfFlats, [targetSupport])
 
 pt, drift = tropical_intersection_point_and_drift(T)
 
 println("pt = ", pt)
-
 println("tropical drift = ", drift)
-
-sop = mixed_subdivision(mixedSupport)
-
-# M = Oscar.matrix(GF(3), [1 0 0; 0 1 0; 0 0 1])
-# display(matroid_from_matrix_columns(M))
-
-
 
 end

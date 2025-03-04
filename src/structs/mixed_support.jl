@@ -81,7 +81,7 @@ end
 Given an ambient support `ambientSupport`, a support `oldSupport` in `ambientSupport`, and a new support `newSupport` that is a superset of `oldSupport`, return the mixed support that is the result of replacing `oldSupport` with `newSupport` in `ambientSupport`.
 """
 function mixed_support(ambientSupport::MixedSupport, oldSupport::Support, newSupport::Support)
-    
+
     @assert is_subset(oldSupport, newSupport) "The new support must be a superset of the old support"
 
     newSupports = [s == oldSupport ? newSupport : s for s in supports(ambientSupport)]
