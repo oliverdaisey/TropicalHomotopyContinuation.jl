@@ -1,5 +1,7 @@
 export Point, point, minkowski_sum
 
+const TropicalPoint = Union{Vector{QQFieldElem}, Vector{Int}}
+
 @doc raw"""
     Point
 
@@ -65,4 +67,8 @@ Compute the Minkowski sum of a list of vector-like objects.
 """
 function minkowski_sum(args::Vector...)
     return vcat([sum(vecs) for vecs in Iterators.product(args...)]...)
+end
+
+function Base.convert(::Type{Vector{QQFieldElem}}, v::Vector{Int})
+    return QQ.(v)
 end

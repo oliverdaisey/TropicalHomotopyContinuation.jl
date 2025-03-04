@@ -63,7 +63,7 @@ function chain_of_flats(M::Matroid, flats::Vector{Flat})
     @assert !isequal(basis(last(flats)), ground_set(M)) "Last flat cannot be the ground set"
     @assert is_subsequence([Set(basis(f)) for f in flats], Set.(Oscar.flats(M))) "Did not provide a valid chain of flats"
     @assert all(length(basis(flats[i])) < length(basis(flats[i+1])) for i in 1:length(flats)-1) "Flats must be strictly increasing in length"
-    
+
     return ChainOfFlats(M, flats)
 end
 
@@ -97,7 +97,9 @@ function Base.show(io::IO, F::Flat)
 end
 
 function Base.show(io::IO, C::ChainOfFlats)
-    print(io, "Chain of flats of length $(length(flats(C)))")
+    # Convert each basis to a set and join with ⊊
+    flat_strings = ["{" * join(sort(collect(basis(f))), ", ") * "}" for f in flats(C)]
+    print(io, "∅ ⊊ " * join(flat_strings, " ⊊ ") * " ⊊ {" * join(sort(collect(ground_set(matroid(C)))), ", ") * "}")
 end
 
 @doc raw"""
@@ -108,25 +110,25 @@ Check if `sub` is a subsequence of `vec`.
 function is_subsequence(sub::Vector{T}, vec::Vector{T})::Bool where T
     # If sub is empty, it's technically a subsequence
     isempty(sub) && return true
-    
+
     # Keep track of the last matched index in vec
     last_matched_index = 0
-    
+
     # Iterate through each element in sub
     for s in sub
         # Find the index of s in vec, starting after the last matched index
-        found_index = findnext(x -> isequal(x,s), vec, last_matched_index + 1)
-        
+        found_index = findnext(x -> isequal(x, s), vec, last_matched_index + 1)
+
         # If not found, or found at an earlier index, return false
         if isnothing(found_index)
             println("Can't find $s in $vec")
             return false
         end
-        
+
         # Update the last matched index
         last_matched_index = found_index
     end
-    
+
     return true
 end
 
@@ -153,7 +155,7 @@ end
 
 Check if the chain of flats `C` is maximal.
 """
-function is_maximal(C::ChainOfFlats) 
+function is_maximal(C::ChainOfFlats)
     return length(C) == rank(matroid(C)) - 1
 end
 
@@ -178,4 +180,41 @@ function Base.:<(C::ChainOfFlats, D::ChainOfFlats)
         println("C has length less than D")
     end
     return (length(flats(C)) < length(flats(D))) && is_subsequence(flats(C), flats(D))
+end
+
+@doc raw"""
+    chain_of_flats(M::Matroid, w::TropicalPoint)
+
+Construct a chain of flats induced on the matroid `M` by the point `w` in the Bergman fan of `M`.
+
+Note that is required that the length of `w` is equal to the size of the ground set of `M`.
+"""
+function chain_of_flats(M::Matroid, w::TropicalPoint)
+    @assert length(w) == length(ground_set(M)) "The tropical point must have the same length as the ground set of the matroid"
+
+    # Create a dictionary to group indices by their values
+    value_indices = Dict{eltype(w), Vector{Int}}()
+        
+    # Populate the dictionary
+    for (idx, val) in enumerate(w)
+        if !haskey(value_indices, val)
+            value_indices[val] = Int[]
+        end
+        push!(value_indices[val], idx)
+    end
+    
+    # Sort the grouped indices
+    sorted_groups = [sort(indices) for (_, indices) in sort(collect(value_indices), by=x->x[1])]
+    
+    # Create cumulative union
+    flat_indices = Vector{Int}[]
+    cumulative_union = Int[]
+    
+    for group in sorted_groups[1:end-1]  # Exclude the last group
+        cumulative_union = sort(union(cumulative_union, group))
+        push!(flat_indices, cumulative_union)
+    end
+    
+    return chain_of_flats(M, flat_indices)
+
 end
