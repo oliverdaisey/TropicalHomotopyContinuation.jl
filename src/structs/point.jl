@@ -1,6 +1,6 @@
 export Point, point, minkowski_sum
 
-"""
+@doc raw"""
     Point
 
 A point in the integer lattice. This is a simple wrapper around a vector of integers. Encodes exponent vectors and monomials.
@@ -9,7 +9,7 @@ struct Point
     entries::AbstractVector{Int}
 end
 
-"""
+@doc raw"""
     point(args...)
 
 Construct a point from a list of integers.
@@ -18,7 +18,7 @@ function point(args...)::Point
     return Point(collect(args))
 end
 
-"""
+@doc raw"""
     point(arg::AbstractVector{Int})
 
 Construct a point from a vector of integers.
@@ -33,7 +33,7 @@ end
 
 Base.length(p::Point) =length(p.entries)
 
-"""
+@doc raw"""
     convert(Vector, p::Point)
 
 Convert a point to a vector.
@@ -58,7 +58,7 @@ function Base.:-(a::Point, b::Point)::Point
     return Point(a.entries .- b.entries)
 end
 
-"""
+@doc raw"""
     minkowski_sum(args...)
 
 Compute the Minkowski sum of a list of vector-like objects.

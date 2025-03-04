@@ -1,7 +1,7 @@
 using Oscar
 export MixedSupport, vector_of_points, cayley_embedding, mixed_subdivision, supports
 
-"""
+@doc raw"""
     struct MixedSupport
 
 A mixed support is a collection of supports. This can represent either ambient support or a mixed cell candidate.
@@ -29,7 +29,7 @@ function Base.show(io::IO, Δ::MixedSupport)
     print(io, "Mixed support involving $(length(supports(Δ))) point supports")
 end
 
-"""
+@doc raw"""
     vector_of_points(Δ::MixedSupport)
 
 Convenience function to return the points of a mixed support as a partitioned vector.
@@ -42,7 +42,7 @@ function points(Δ::MixedSupport)
     return collect(Iterators.flatten(vector_of_points(Δ)))
 end
 
-"""
+@doc raw"""
     mixed_subdivision(Δ::MixedSupport)
 
 Computes the mixed subdivision corresponding to the mixed support Δ.
@@ -55,7 +55,7 @@ function mixed_subdivision(Δ::MixedSupport)
     return subdivision
 end
 
-"""
+@doc raw"""
     is_subset(S::MixedSupport, T::MixedSupport)
 
 Returns `true if `S` is a subset of `T`, and `false` otherwise.
@@ -75,7 +75,7 @@ function is_subset(S::MixedSupport, T::MixedSupport)
     return true
 end
 
-"""
+@doc raw"""
     mixed_support(ambientSupport::MixedSupport, oldSupport::Support, newSupport::Support)
 
 Given an ambient support `ambientSupport`, a support `oldSupport` in `ambientSupport`, and a new support `newSupport` that is a superset of `oldSupport`, return the mixed support that is the result of replacing `oldSupport` with `newSupport` in `ambientSupport`.

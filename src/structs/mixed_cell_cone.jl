@@ -1,6 +1,6 @@
 using Oscar
 
-"""
+@doc raw"""
     struct MixedCellConeFacet
 
 A facet of a mixed cell cone defined by `circuit` that involves the extra point `point`.
@@ -12,7 +12,7 @@ struct MixedCellConeFacet
 
 end
 
-"""
+@doc raw"""
     struct MixedCellCone
 
 A mixed cell cone defined by `facets` over `ambientSupport`. These encode the permissible heights that give rise to the a mixed cell.
@@ -24,7 +24,7 @@ struct MixedCellCone
 
 end
 
-"""
+@doc raw"""
     facets(C::MixedCellCone)
 
 Return the facets of the mixed cell cone `C`.
@@ -33,7 +33,7 @@ function facets(C::MixedCellCone)
     return C.facets
 end
 
-"""
+@doc raw"""
     extra_point(κ::MixedCellConeFacet)
 
 Return the extra point outside the defining mixed cell candidate defining the mixed cell cone facet `κ`.
@@ -52,7 +52,7 @@ function Base.show(io::IO, F::MixedCellConeFacet)
     print(io, "Mixed cell cone facet corresponding to point $(extra_point(F))")
 end
 
-"""
+@doc raw"""
     mixed_cell_cone(facets::AbstractVector{MixedCellConeFacet})::MixedCellCone
 
 Construct a mixed cell cone from `facets`.
@@ -61,7 +61,7 @@ function mixed_cell_cone(ambientSupport::MixedSupport, facets::AbstractVector{Mi
     return MixedCellCone(ambientSupport, facets)
 end
 
-"""
+@doc raw"""
     mixed_cell_cone_facet(circuit::Dict{Point, height})::MixedCellConeFacet
 
 Construct a mixed cell cone facet from `circuit` using the extra point `p`. These are the nontrivial entries of the defining linear functional of the facet.
@@ -70,7 +70,7 @@ function mixed_cell_cone_facet(circuit::Dict{Point, Height}, p::Point)::MixedCel
     return MixedCellConeFacet(circuit, p)
 end
 
-"""
+@doc raw"""
     circuit(κ::MixedCellConeFacet)
 
 Return the circuit defining the mixed cell cone facet `κ`.
@@ -79,7 +79,7 @@ function circuit(κ::MixedCellConeFacet)
     return κ.circuit
 end
 
-"""
+@doc raw"""
     mixed_cell_cone(candidate::MixedSupport, ambientSupport::MixedSupport)
 
 Compute the mixed cell cone of a mixed cell candidate `candidate` with ambient support `ambientSupport`.
@@ -129,7 +129,7 @@ function mixed_cell_cone(T::Tracker)::MixedCellCone
     return mixed_cell_cone(candidate(T), ambient_support(T))
 end
 
-"""
+@doc raw"""
     in(Δ::MixedSupport, C::MixedCellCone)
 
 Tests whether the heights in `Δ` are in the mixed cell cone `C`.
@@ -145,7 +145,7 @@ function Base.in(Δ::MixedSupport, C::MixedCellCone)
     return all(dotProducts .< 0)
 end
 
-"""
+@doc raw"""
     ambient_support(C::MixedCellCone)
 
 Return the ambient support defining the mixed cell cone `C`.
@@ -154,7 +154,7 @@ function ambient_support(C::MixedCellCone)
     return C.ambientSupport
 end
 
-"""
+@doc raw"""
     points(C::MixedCellCone)
 
 Return the ambient points that define the support of the mixed cell cone `C`.
@@ -163,7 +163,7 @@ function points(C::MixedCellCone)
     return points(ambient_support(C))
 end
 
-"""
+@doc raw"""
     Base.convert(::Type{Polyhedron}, C::MixedCellCone)
 
 Convert a mixed cell cone `C` to a polymake polyhedron.

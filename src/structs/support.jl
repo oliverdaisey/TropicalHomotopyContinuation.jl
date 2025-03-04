@@ -1,6 +1,6 @@
 export vector_of_points, points
 
-"""
+@doc raw"""
     Support
 
 A support is a collection of points with associated heights.
@@ -42,7 +42,7 @@ function Base.:-(s::Support, t::Support)::Support
     
 end
 
-"""
+@doc raw"""
     update_height!(s::Support, p::Point, w::Height)
 
 Update the height of a point in the support.
@@ -52,7 +52,7 @@ function update_height!(s::Support, p::Point, w::Height)
     s.entries[p] = w
 end
 
-"""
+@doc raw"""
     vector_of_points(s::Support)
 
 Convenience function to return the points of a support as a vector.
@@ -65,7 +65,7 @@ function Base.in(p::Point, s::Support)
     return haskey(entries(s), p)
 end
 
-"""
+@doc raw"""
     is_subset(S::Support, T::Support)
 
 Returns true if the support S is a subset of the support T.
@@ -74,7 +74,7 @@ function is_subset(S::Support, T::Support)
    return all(p -> in(p, T), points(S))
 end
 
-"""
+@doc raw"""
     support(S::Support, p::Point)
 
 Merges the point `p` into the support `S`.

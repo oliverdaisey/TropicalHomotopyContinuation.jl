@@ -5,7 +5,7 @@ struct CayleyEmbedding
 
 end
 
-"""
+@doc raw"""
     cayley_embedding(Δ::MixedSupport)::CayleyEmbedding
 
 Construct the Cayley embedding of a mixed support `Δ`.
@@ -23,7 +23,7 @@ function Base.show(io::IO, cayley::CayleyEmbedding)
     print(io, "Cayley embedding of $(length(supports(cayley))) point sets")
 end
 
-"""
+@doc raw"""
     matrix(Δ::MixedSupport)
 
 Given a mixed support `Δ`, returns its Cayley matrix.
@@ -41,7 +41,7 @@ function matrix(Δ::MixedSupport)
     return hcat(vcat(ptConfigurations...)...)
 end
 
-"""
+@doc raw"""
     matrix(cayley::CayleyEmbedding)
 
 Return the matrix representation of the Cayley embedding.
@@ -52,7 +52,7 @@ function matrix(cayley::CayleyEmbedding)
 
 end
 
-"""
+@doc raw"""
     supports(cayley::CayleyEmbedding)::MixedSupport
 
 Return the mixed support involved in the Cayley embedding.
@@ -61,7 +61,7 @@ function supports(cayley::CayleyEmbedding)::MixedSupport
     return cayley.supports
 end
 
-"""
+@doc raw"""
     points(cayley::CayleyEmbedding)
 
 Return the points of the Cayley embedding collected inside a vector.
@@ -70,7 +70,7 @@ function points(cayley::CayleyEmbedding)
     return collect(eachcol(matrix(cayley)))
 end
 
-"""
+@doc raw"""
     dim(cayley::CayleyEmbedding)
 
 Return the dimension of the points defining the Cayley embedding. Note that this is not the same as the dimension of the Cayley embedding.
@@ -79,7 +79,7 @@ function dim(cayley::CayleyEmbedding)
     return cayley.dim
 end
 
-"""
+@doc raw"""
     Base.getindex(cayley::CayleyEmbedding, indices::MixedSupport)
 
 Given a mixed support where each support is a subset of the supports of `cayley`, return the submatrix of `cayley` indexed by the supports in `indices`.
