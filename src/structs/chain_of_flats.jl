@@ -1,7 +1,7 @@
 using Oscar
 
 struct Flat
-    matroid::Matroid
+    matroid::Union{RealisableMatroid, Matroid}
     basis::Set{Int}
 end
 
@@ -11,7 +11,7 @@ end
 A chain of flats is an ascending sequence of flats of a matroid, starting from the empty set and ending at the ground set.
 """
 struct ChainOfFlats
-    matroid::Matroid
+    matroid::Union{RealisableMatroid, Matroid}
     flats::Vector{Flat}
 end
 
@@ -53,30 +53,30 @@ function basis(F::Flat)
 end
 
 @doc raw"""
-    chain_of_flats(M::Matroid, flats::Vector{Flat})
+    chain_of_flats(M::Union{RealisableMatroid, Matroid}, flats::Vector{Flat})
 
 Construct a chain of flats from a matroid and a vector of flats.
 """
-function chain_of_flats(M::Matroid, flats::Vector{Flat})
+function chain_of_flats(M::Union{RealisableMatroid, Matroid}, flats::Vector{Flat})
     # check that we have a valid chain of flats
     @assert !isempty(first(flats)) "First flat cannot be the empty set"
     @assert !isequal(basis(last(flats)), ground_set(M)) "Last flat cannot be the ground set"
-    @assert is_subsequence([Set(basis(f)) for f in flats], Set.(Oscar.flats(M))) "Did not provide a valid chain of flats"
+    @assert is_subsequence([Set(basis(f)) for f in flats], Set.(Oscar.flats(matroid(M)))) "Did not provide a valid chain of flats"
     @assert all(length(basis(flats[i])) < length(basis(flats[i+1])) for i in 1:length(flats)-1) "Flats must be strictly increasing in length"
 
     return ChainOfFlats(M, flats)
 end
 
-function chain_of_flats(M::Matroid, flats::Vector{Vector{Int}})
+function chain_of_flats(M::Union{RealisableMatroid, Matroid}, flats::Vector{Vector{Int}})
     return chain_of_flats(M, [Flat(M, Set(f)) for f in flats])
 end
 
 @doc raw"""
-    flat(M::Matroid, basis::Union{Set{Int}, Set{}})
+    flat(M::Union{RealisableMatroid, Matroid}, basis::Union{Set{Int}, Set{}})
 
 Construct a flat from a matroid and a basis. Raises an error if the basis is not a valid flat.
 """
-function flat(M::Matroid, basis::Set{Int})
+function flat(M::Union{RealisableMatroid, Matroid}, basis::Set{Int})
     # check that the elements of basis actually index a basis in M
     @assert basis in Set.(flats(M)) "Did not provide a valid basis for a flat"
     @assert !isequal(basis, ground_set(M)) "Basis cannot be the ground set"
@@ -84,11 +84,11 @@ function flat(M::Matroid, basis::Set{Int})
 end
 
 @doc raw"""
-    flat(M::Matroid, basis::Union{Vector{Int}, Vector{}})
+    flat(M::Union{RealisableMatroid, Matroid}, basis::Union{Vector{Int}, Vector{}})
 
 Construct a flat from a matroid and a basis. Raises an error if the basis is not a valid flat.
 """
-function flat(M::Matroid, basis::Vector{Int})
+function flat(M::Union{RealisableMatroid, Matroid}, basis::Vector{Int})
     return flat(M, Set(basis))
 end
 
@@ -133,7 +133,7 @@ function is_subsequence(sub::Vector{T}, vec::Vector{T})::Bool where T
 end
 
 @doc raw"""
-    ground_set(M::Matroid)
+    ground_set(M::Union{RealisableMatroid, Matroid})
 
 Return the ground set of a matroid as a set.
 """
@@ -183,13 +183,13 @@ function Base.:<(C::ChainOfFlats, D::ChainOfFlats)
 end
 
 @doc raw"""
-    chain_of_flats(M::Matroid, w::TropicalPoint)
+    chain_of_flats(M::Union{RealisableMatroid, Matroid}, w::TropicalPoint)
 
 Construct a chain of flats induced on the matroid `M` by the point `w` in the Bergman fan of `M`.
 
 Note that is required that the length of `w` is equal to the size of the ground set of `M`.
 """
-function chain_of_flats(M::Matroid, w::TropicalPoint)
+function chain_of_flats(M::Union{RealisableMatroid, Matroid}, w::TropicalPoint)
     @assert length(w) == length(ground_set(M)) "The tropical point must have the same length as the ground set of the matroid"
 
     # Create a dictionary to group indices by their values
