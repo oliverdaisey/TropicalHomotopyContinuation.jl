@@ -77,10 +77,10 @@ end
 @doc raw"""
     support(S::Support, p::Point)
 
-Merges the point `p` into the support `S`.
+Merges the point `p` into the support `S`. Gives height 0 by default.
 """
 function support(S::Support, p::Point)::Support
-    return Support(merge(Dict(p => height(1)), entries(S)))
+    return Support(merge(Dict(p => 0), entries(S)))
 end
 
 function Base.getindex(s::Support, p::Point)

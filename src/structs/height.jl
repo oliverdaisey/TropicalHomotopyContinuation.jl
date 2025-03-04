@@ -1,10 +1,10 @@
 using Oscar
 
-export Height, height
+export Height
 
 const Height = Union{QQFieldElem, PosInf}
 
-function height(w)::Height
+function Base.convert(::Type{Height}, w)::Height
     if isinf(w)
         return w 
     end
