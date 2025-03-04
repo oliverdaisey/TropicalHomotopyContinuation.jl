@@ -42,7 +42,7 @@ end
 """
     targets(T::Tracker)
 
-Return the targets support of the tracker `T`. This is where the tracker should terminate.
+Return the targets of the tracker `T`. This is a vector of mixed supports that the tracker is trying to reach.
 """
 function targets(T::Tracker)
     return T.targets
@@ -55,7 +55,7 @@ end
 """
     direction(T::Tracker)
 
-Return the direction of the tracker `T`. This is the difference between the targets and ambient supports.
+Return the direction of the tracker `T`. This is the difference between the first target and ambient support.
 """
 function direction(T::Tracker)
     return first(targets(T)) - ambient_support(T)
@@ -70,21 +70,23 @@ end
 
 Compute the tropical intersection point and tropical drift of the tracker `T`. Returns `Nothing` if the intersection point is not well-defined.
 """
-function tropical_intersection_point_and_drift(T::Tracker)::Union{Nothing, Tuple{Vector{QQFieldElem}, Vector{QQFieldElem}}}
+function tropical_intersection_point_and_drift(T::Tracker)::Union{Nothing,Tuple{Vector{QQFieldElem},Vector{QQFieldElem}}}
 
     σ = active_support(T)
     Δ = ambient_support(T)
+    τ = direction(T)[p]
 
     rows = Vector{Int}[]
     heights = QQFieldElem[]
     dir = QQFieldElem[]
+    
     for S in supports(σ)
         p1 = first(points(S))
         for p in points(S)
             if !isequal(p1, p)
                 push!(rows, p1 - p)
                 push!(heights, Δ[p] - Δ[p1])
-                push!(dir, direction(T)[p] - direction(T)[p1])
+                push!(dir, τ[p] - τ[p1])
             end
         end
     end
