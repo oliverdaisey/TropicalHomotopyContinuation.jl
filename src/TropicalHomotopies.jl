@@ -32,23 +32,23 @@ cayley = cayley_embedding(mixedSupport)
 
 candidate = mixed_support((support([p1, p2], [0, 0]), support([p6, p7], [1, 0])))
 
-println(candidate in mixed_cell_cone(candidate, mixedSupport))
-
-polymakePolyhedron = convert(Polyhedron, mixed_cell_cone(candidate, mixedSupport))
-
-display(Oscar.dim(polymakePolyhedron))
-
 targetSupport = mixed_support((support([p1, p2, p3, p4], [0, 0, 0, 0]), support([p5, p6, p7], [2, 1 // 2, 0])))
 
-M = matroid(Oscar.matrix(GF(3), [1 0 0 0 0; 0 1 0 0 0; 0 0 1 0 0; 0 0 0 1 0; 0 0 0 0 1]))
+M = matroid(Oscar.matrix(GF(3), [1 0 0 0 0; 0 1 0 0 0; 0 0 1 1 0; 0 0 0 0 0; 0 0 0 0 1]))
+# M = uniform_matroid(2, 4)
 
-chainOfFlats = chain_of_flats(M, [[1], [1,2]])
+chainOfFlats = chain_of_flats(M, [[3,4],[3,4,5]])
+
+println(chainOfFlats)
 
 T = tracker(mixedSupport, candidate, chainOfFlats, [targetSupport])
 
 pt, drift = tropical_intersection_point_and_drift(T)
 
-println("pt = ", pt)
+println("intersection point = ", pt)
 println("tropical drift = ", drift)
+
+println(loopless_face(chainOfFlats))
+println(M)
 
 end

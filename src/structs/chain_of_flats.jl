@@ -1,7 +1,7 @@
 using Oscar
 
 struct Flat
-    matroid::Union{RealisableMatroid, Matroid}
+    matroid::Union{RealisableMatroid,Matroid}
     basis::Set{Int}
 end
 
@@ -11,7 +11,7 @@ end
 A chain of flats is an ascending sequence of flats of a matroid, starting from the empty set and ending at the ground set.
 """
 struct ChainOfFlats
-    matroid::Union{RealisableMatroid, Matroid}
+    matroid::Union{RealisableMatroid,Matroid}
     flats::Vector{Flat}
 end
 
@@ -57,7 +57,7 @@ end
 
 Construct a chain of flats from a matroid and a vector of flats.
 """
-function chain_of_flats(M::Union{RealisableMatroid, Matroid}, flats::Vector{Flat})
+function chain_of_flats(M::Union{RealisableMatroid,Matroid}, flats::Vector{Flat})
     # check that we have a valid chain of flats
     @assert !isempty(first(flats)) "First flat cannot be the empty set"
     @assert !isequal(basis(last(flats)), ground_set(M)) "Last flat cannot be the ground set"
@@ -67,7 +67,7 @@ function chain_of_flats(M::Union{RealisableMatroid, Matroid}, flats::Vector{Flat
     return ChainOfFlats(M, flats)
 end
 
-function chain_of_flats(M::Union{RealisableMatroid, Matroid}, flats::Vector{Vector{Int}})
+function chain_of_flats(M::Union{RealisableMatroid,Matroid}, flats::Vector{Vector{Int}})
     return chain_of_flats(M, [Flat(M, Set(f)) for f in flats])
 end
 
@@ -76,7 +76,7 @@ end
 
 Construct a flat from a matroid and a basis. Raises an error if the basis is not a valid flat.
 """
-function flat(M::Union{RealisableMatroid, Matroid}, basis::Set{Int})
+function flat(M::Union{RealisableMatroid,Matroid}, basis::Set{Int})
     # check that the elements of basis actually index a basis in M
     @assert basis in Set.(flats(M)) "Did not provide a valid basis for a flat"
     @assert !isequal(basis, ground_set(M)) "Basis cannot be the ground set"
@@ -88,7 +88,7 @@ end
 
 Construct a flat from a matroid and a basis. Raises an error if the basis is not a valid flat.
 """
-function flat(M::Union{RealisableMatroid, Matroid}, basis::Vector{Int})
+function flat(M::Union{RealisableMatroid,Matroid}, basis::Vector{Int})
     return flat(M, Set(basis))
 end
 
@@ -167,6 +167,10 @@ function Base.isempty(F::Flat)
     return isempty(basis(F))
 end
 
+function Base.isempty(C::ChainOfFlats)
+    return isempty(flats(C))
+end
+
 function Base.isequal(F::Flat, G::Flat)
     return basis(F) == basis(G) && matroid(F) == matroid(G)
 end
@@ -189,12 +193,12 @@ Construct a chain of flats induced on the matroid `M` by the point `w` in the Be
 
 Note that is required that the length of `w` is equal to the size of the ground set of `M`.
 """
-function chain_of_flats(M::Union{RealisableMatroid, Matroid}, w::TropicalPoint)
+function chain_of_flats(M::Union{RealisableMatroid,Matroid}, w::TropicalPoint)
     @assert length(w) == length(ground_set(M)) "The tropical point must have the same length as the ground set of the matroid"
 
     # Create a dictionary to group indices by their values
-    value_indices = Dict{eltype(w), Vector{Int}}()
-        
+    value_indices = Dict{eltype(w),Vector{Int}}()
+
     # Populate the dictionary
     for (idx, val) in enumerate(w)
         if !haskey(value_indices, val)
@@ -202,19 +206,107 @@ function chain_of_flats(M::Union{RealisableMatroid, Matroid}, w::TropicalPoint)
         end
         push!(value_indices[val], idx)
     end
-    
+
     # Sort the grouped indices
-    sorted_groups = [sort(indices) for (_, indices) in sort(collect(value_indices), by=x->x[1])]
-    
+    sorted_groups = [sort(indices) for (_, indices) in sort(collect(value_indices), by=x -> x[1])]
+
     # Create cumulative union
     flat_indices = Vector{Int}[]
     cumulative_union = Int[]
-    
+
     for group in sorted_groups[1:end-1]  # Exclude the last group
         cumulative_union = sort(union(cumulative_union, group))
         push!(flat_indices, cumulative_union)
     end
-    
+
     return chain_of_flats(M, flat_indices)
 
+end
+
+@doc raw"""
+    loopless_face(C::ChainOfFlats)
+
+Return the vertices of the loopless face whose Bergman cone contains the cone dual to `C`.
+"""
+function loopless_face(C::ChainOfFlats)
+    looplessFaceVertices = Point[]
+    for candidateBasis in candidate_bases(C)
+        if is_basis(matroid(C), candidateBasis)
+            # Create indicator vector for the candidate basis
+            v = [i ∈ candidateBasis ? 1 : 0 for i in ground_set(matroid(C))]
+            push!(looplessFaceVertices, Point(v))
+        end
+    end
+
+    return looplessFaceVertices
+end
+@doc raw"""
+    candidate_bases(C::ChainOfFlats)
+
+Return a Vector of potential bases for the underlying matroid of `C`.
+These are defined by taking exactly one element from each flat comprising `C`,
+and adding the ground set, ensuring the result has size equal to the matroid's rank.
+"""
+function candidate_bases(C::ChainOfFlats)::Vector{Set{Int}}
+    # If the chain of flats is empty, return an empty vector
+    isempty(C) && return Vector{Set{Int}}()
+    
+    # Get the ground set
+    ground_set_elements = ground_set(matroid(C))
+    
+    # Initialize the result vector to store candidate bases
+    candidate_bases_result = Vector{Set{Int}}()
+    
+    # Recursive helper function to generate candidate bases
+    function generate_bases(current_base::Set{Int}, flat_index::Int)
+        # Base case: if we've processed all flats
+        if flat_index > length(C)
+            # Complete the base with ground set elements to reach the matroid's rank
+            missing_elements = rank(matroid(C)) - length(current_base)
+            
+            # Try to find missing elements from ground set
+            remaining_ground_set = sort(collect(setdiff(ground_set_elements, current_base)))
+            
+            if length(remaining_ground_set) >= missing_elements
+                # Generate all possible completions of the base
+                for completion in Iterators.product(fill(remaining_ground_set, missing_elements)...)
+                    unique_completion = unique(completion)
+                    if length(unique_completion) == missing_elements
+                        complete_base = union(current_base, Set(unique_completion))
+                        push!(candidate_bases_result, complete_base)
+                    end
+                end
+            end
+            return
+        end
+        
+        # Get the current flat's basis
+        current_flat_basis = basis(flats(C)[flat_index])
+        
+        # If current base is empty, generate bases starting with single elements from the first flat
+        if isempty(current_base)
+            for element in current_flat_basis
+                generate_bases(Set{Int}([element]), flat_index + 1)
+            end
+            return
+        end
+        
+        # Try each element in the current flat
+        for element in current_flat_basis
+            # Skip if element already in base
+            (element ∈ current_base) && continue
+            
+            # Create a new base by adding the current element
+            new_base = copy(current_base)
+            push!(new_base, element)
+            
+            # Recursively generate bases for the next flat
+            generate_bases(new_base, flat_index + 1)
+        end
+    end
+    
+    # Start the recursive generation
+    generate_bases(Set{Int}(), 1)
+    
+    return candidate_bases_result
 end

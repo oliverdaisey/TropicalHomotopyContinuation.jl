@@ -36,9 +36,21 @@ function flats(M::RealisableMatroid)
 end
 
 function rank(M::RealisableMatroid)
-    return rank(matroid(M))
+    return Oscar.rank(matroid(M))
+end
+
+function rank(M::Matroid)
+    return Oscar.rank(M)
 end
 
 function matroid(M::Matroid)
     return M
+end
+
+function is_basis(M::RealisableMatroid, b::Set{Int})
+    return isequal(Oscar.rank(matrix(M)[:, collect(b)]), Oscar.rank(matrix(M)))
+end
+
+function is_basis(M::Matroid, b::Set{Int})
+    return b in Set.(bases(M))
 end
