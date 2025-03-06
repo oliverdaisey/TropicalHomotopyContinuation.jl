@@ -97,3 +97,7 @@ end
 function Base.:-(a::MixedSupport, b::MixedSupport)::MixedSupport
     return mixed_support(tuple([s - t for (s, t) in zip(supports(a), supports(b))]...))
 end
+
+function Base.:*(a::Height, Δ::MixedSupport)::MixedSupport
+    return mixed_support(tuple([a * s for s in supports(Δ)]...))
+end

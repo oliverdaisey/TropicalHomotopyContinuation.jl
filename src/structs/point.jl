@@ -73,6 +73,19 @@ function Base.convert(::Type{Vector{QQFieldElem}}, v::Vector{Int})
     return QQ.(v)
 end
 
+function Base.convert(::Type{Point}, v::Vector{QQFieldElem})
+    return point(convert(Vector{Int}, v))
+end
+
 function entries(p::Point)
     return p.entries
+end
+
+@doc raw"""
+    matrix(v::Vector{Point})
+
+Convert a vector with elements of type `Point` to an Oscar matrix.
+"""
+function matrix(v::Vector{Point})
+    return Oscar.matrix(QQ, [entries(p) for p in v])
 end

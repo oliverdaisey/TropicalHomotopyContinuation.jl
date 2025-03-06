@@ -45,11 +45,12 @@ end
 @doc raw"""
     update_height!(s::Support, p::Point, w::Height)
 
-Update the height of a point in the support.
+Update the height of a point in the support. Does nothing if the point is not in the support.
 """
 function update_height!(s::Support, p::Point, w::Height)
-    @assert haskey(entries(s), p) "The point $p is not in the support"
-    s.entries[p] = w
+    if haskey(entries(s), p)
+        s.entries[p] = w
+    end
 end
 
 @doc raw"""
@@ -80,9 +81,13 @@ end
 Merges the point `p` into the support `S`. Gives height 0 by default.
 """
 function support(S::Support, p::Point)::Support
-    return Support(merge(Dict(p => 0), entries(S)))
+    return NewtonSubdivision(merge(Dict(p => 0), entries(S)))
 end
 
 function Base.getindex(s::Support, p::Point)
     return get(entries(s), p, tropical_semiring()(one(QQ)))
+end
+
+function Base.:*(w::Height, s::Support)::Support
+    return Support(Dict((p, w * h) for (p, h) in entries(s)))
 end

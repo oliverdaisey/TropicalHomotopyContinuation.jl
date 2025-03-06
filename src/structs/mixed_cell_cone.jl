@@ -82,27 +82,27 @@ end
 @doc raw"""
     mixed_cell_cone(candidate::MixedSupport, ambientSupport::MixedSupport)
 
-Compute the mixed cell cone of a mixed cell candidate `candidate` with ambient support `ambientSupport`.
+Compute the mixed cell cone of a mixed cell candidate `σ` with ambient support `ambientSupport`.
 """
-function mixed_cell_cone(candidate::MixedSupport, ambientSupport::MixedSupport)::MixedCellCone
+function mixed_cell_cone(σ::MixedCell, ambientSupport::MixedSupport)::MixedCellCone
 
-    @assert length(candidate) == length(ambientSupport) "Mixed vell candidate and ambient support must have the same number of supports."
+    @assert length(σ) == length(ambientSupport) "Mixed cell candidate and ambient support must have the same number of supports."
 
     cayleyEmbedding = cayley_embedding(ambientSupport)
 
     facets = MixedCellConeFacet[]
     
     for p in points(ambientSupport)
-        if p in points(candidate)
+        if p in points(σ)
             continue
         end
-        # for all points p not in ambient support, get submatrix of cayleyEmbedding indexed by candidate and p
+        # for all points p not in ambient support, get submatrix of cayleyEmbedding indexed by mixed cell candidate and p
         index = findfirst(x -> p in x, supports(ambientSupport))
 
         # take the support with index `index` and augment it with p
-        oldSupport = supports(candidate)[index]
+        oldSupport = supports(σ)[index]
         newSupport = support(oldSupport, p)
-        newMixedSupport = mixed_support(candidate, oldSupport, newSupport)
+        newMixedSupport = mixed_support(σ, oldSupport, newSupport)
         submatrix = cayleyEmbedding[newMixedSupport]
         nontrivialEntries = Matrix(nullspace(Oscar.matrix(QQ, submatrix))[2])
 
@@ -113,7 +113,7 @@ function mixed_cell_cone(candidate::MixedSupport, ambientSupport::MixedSupport):
         
         # circuit has enties all zero except for nontrivialEntries
         circuit = Dict{Point, Height}()
-        for point in points(candidate)
+        for point in points(σ)
             circuit[point] = height(nontrivialEntries[findfirst(x -> x == p, points(newMixedSupport))])
         end
         circuit[p] = height(nontrivialEntries[findfirst(x -> x == p, points(newMixedSupport))])
@@ -123,10 +123,6 @@ function mixed_cell_cone(candidate::MixedSupport, ambientSupport::MixedSupport):
     end
 
     return mixed_cell_cone(ambientSupport, facets)
-end
-
-function mixed_cell_cone(T::Tracker)::MixedCellCone
-    return mixed_cell_cone(candidate(T), ambient_support(T))
 end
 
 @doc raw"""

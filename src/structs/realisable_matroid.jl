@@ -32,7 +32,7 @@ function ground_set(M::RealisableMatroid)
 end
 
 function flats(M::RealisableMatroid)
-    return flats(matroid(M))
+    return Oscar.flats(matroid(M))
 end
 
 function rank(M::RealisableMatroid)

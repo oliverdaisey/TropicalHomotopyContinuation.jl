@@ -7,28 +7,27 @@ A tracker for a mixed cell. Fundamental unit of the homotopy algorithm.
 mutable struct Tracker
 
     ambientSupport::MixedSupport
-    activeSupport::MixedSupport
-    chainOfFlats::ChainOfFlats
+    mixedCells::Vector{MixedCell}
     targets::Vector{MixedSupport}
 
 end
 
 @doc raw"""
-    tracker(ambientSupport::MixedSupport, activeSupport::MixedSupport, chainOfFlats::ChainOfFlats, targets::MixedSupport)::Tracker
+    tracker(ambientSupport::MixedSupport, mixedCells::Vector{MixedCellCandidate}, targets::MixedSupport)::Tracker
 
 Construct a tracker for a mixed cell.
 """
-function tracker(ambientSupport::MixedSupport, activeSupport::MixedSupport, chainOfFlats::ChainOfFlats, targets::Vector{MixedSupport})::Tracker
-    return Tracker(ambientSupport, activeSupport, chainOfFlats, targets)
+function tracker(ambientSupport::MixedSupport, mixedCells::Vector{MixedCell}, targets::Vector{MixedSupport})::Tracker
+    return Tracker(ambientSupport, mixedCells, targets)
 end
 
 @doc raw"""
-    active_support(T::Tracker)
+    mixed_cells(T::Tracker)
 
-Return the active support of the tracker `T`. These define the mixed cell candidate we are tracking.
+Return the mixed cells of the tracker `T`.
 """
-function active_support(T::Tracker)
-    return T.activeSupport
+function mixed_cells(T::Tracker)
+    return T.mixedCells
 end
 
 @doc raw"""
@@ -53,16 +52,14 @@ function perturb(T::Tracker)
     # TODO: Write implementation
 end
 
-function chain_of_flats(T::Tracker)
-    return T.chainOfFlats
-end
-
 @doc raw"""
     direction(T::Tracker)
 
 Return the direction of the tracker `T`. This is the difference between the first target and ambient support.
 """
 function direction(T::Tracker)
+    # TODO: If points go to infinity, make sure the points that stay finite are the same in the target and ambient support
+    # TODO: In the infinity case, normalize direction to be a 0/1 vector
     return first(targets(T)) - ambient_support(T)
 end
 
@@ -73,17 +70,29 @@ end
 @doc raw"""
     tropical_intersection_point_and_drift(T::Tracker)::Union{Nothing, Tuple{Vector{QQFieldElem}, Vector{QQFieldElem}}}
 
-Compute the tropical intersection point and tropical drift of the tracker `T`. Returns `Nothing` if the intersection point is not well-defined.
+Compute the tropical intersection point and tropical drift of the mixed cell σ with tracker `T`. Returns `Nothing` if the intersection point is not well-defined.
 """
-function tropical_intersection_point_and_drift(T::Tracker)::Union{Nothing,Tuple{Vector{QQFieldElem},Vector{QQFieldElem}}}
+function tropical_intersection_point_and_drift(T::Tracker, σ::MixedCell)::Union{Nothing,Tuple{Vector{QQFieldElem},Vector{QQFieldElem}}}
 
-    σ = active_support(T)
     Δ = ambient_support(T)
     τ = direction(T)
+    C = chain_of_flats(σ)
 
     rows = Vector{Int}[]
     heights = QQFieldElem[]
     dir = QQFieldElem[]
+
+    # add in rows from chain of flats
+    pts = loopless_face(C)
+    p1 = first(pts)
+
+    for p in pts
+        if !isequal(p1, p)
+            push!(rows, p1 - p)
+            push!(heights, 0)
+            push!(dir, 0)
+        end
+    end
 
     for S in supports(σ)
         p1 = first(points(S))
@@ -99,9 +108,39 @@ function tropical_intersection_point_and_drift(T::Tracker)::Union{Nothing,Tuple{
     flag, inverse = Oscar.is_invertible_with_inverse(Oscar.matrix(QQ, rows))
 
     if !flag
-        return Nothing
+        return nothing
     end
 
     return inverse * heights, inverse * dir
+end
 
+@doc raw"""
+    merge_mixed_cell!(T::Tracker, σ::MixedCell)
+
+Merge the mixed cell `σ` into the tracker `T`.
+"""
+function merge_mixed_cell!(T::Tracker, σ::MixedCell)
+    push!(T.mixedCells, σ)
+end
+
+@doc raw"""
+    remove_mixed_cell!(T::Tracker, σ::MixedCell)
+
+Remove the mixed cell `σ` from the tracker `T`.
+"""
+function remove_mixed_cell!(T::Tracker, σ::MixedCell)
+    deleteat!(T.mixedCells, findfirst(isequal(σ), mixed_cells(T)))
+end
+
+@doc raw"""
+    add_heights!(T::Tracker, Δ::MixedSupport)
+
+Add the heights in `Δ` to the heights of the ambient support of the tracker `T`.
+"""
+function add_heights!(T::Tracker, Δ::MixedSupport)
+    for S in supports(ambient_support(T))
+        for p in points(S)
+            update_height!(S, p, ambient_support(T)[p] + Δ[p])
+        end
+    end
 end
