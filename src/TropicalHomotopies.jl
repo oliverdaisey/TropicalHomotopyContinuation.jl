@@ -35,7 +35,7 @@ M = matroid(Oscar.matrix(QQ, [-1 -2 -3 -4; 11 13 15 19]))
 chainOfFlats = chain_of_flats(M, [[4]])
 println("loopless face = ", loopless_face(chainOfFlats))
 
-candidate = mixed_cell(mixed_support((support([p1,p2],[0,0]),support([p3,p4],[0,3]))), chainOfFlats)
+candidate = mixed_cell(mixed_support((support([p1,p2],[0,0]),support([p3,p4],[0,2]))), chainOfFlats)
 
 T = tracker(mixedSupport, [candidate], [targetSupport])
 
@@ -80,5 +80,10 @@ for σ in mixed_cells(T)
     println(" ")
 end
 
+add_heights!(T, direction(T))
+
+for σ in mixed_cells(T)
+    println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
+end
 
 end

@@ -1,6 +1,6 @@
 using Oscar
 
-function t_jensen(T::Tracker)::Union{QQFieldElem,Nothing}
+function jensen_time(T::Tracker, σ::MixedCell)::Union{QQFieldElem,Nothing}
     #TODO: When T includes Bergman fan, transform to appropriate hypersurface dual supports.
 
     Δ = ambient_support(T)
@@ -16,8 +16,4 @@ function t_jensen(T::Tracker)::Union{QQFieldElem,Nothing}
 
     return v
     
-end
-
-function cone_intersection_time(C::MixedCellCone, σ::MixedSupport, v::Vector{QQFieldElem})::Union{QQFieldElem,Nothing}
-
 end
