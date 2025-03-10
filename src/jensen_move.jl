@@ -1,19 +1,18 @@
 using Oscar
 
 function jensen_time(T::Tracker, σ::MixedCell)::Union{QQFieldElem,Nothing}
-    #TODO: When T includes Bergman fan, transform to appropriate hypersurface dual supports.
-
-    Δ = ambient_support(T)
-    σ = active_support(T)
-    C = mixed_cell_cone(σ, Δ)
     
-    @assert σ in C "The mixed cell being tracked is not in the mixed cell cone."
+    hypersurfaceDuals = transform_linear_support(chain_of_flats(σ))
+
+    δ = combine(active_support(σ), hypersurfaceDuals)
+    Δ = combine(ambient_support(T), hypersurfaceDuals)
+
+    C = mixed_cell_cone(δ, Δ)
+    
+    @assert δ in C "The mixed cell being tracked is not in the mixed cell cone."
 
     v = direction(T)
-    pts = points(C)
 
-    # Calculate when σ breaches C when heights change in direction v
-
-    return v
+    return minimum([dot(v, u) != 0 ? -dot(v, δ) / dot(v, u) : PosInf for u in facets(C)])
     
 end

@@ -75,13 +75,12 @@ end
 @doc raw"""
     transform_linear_support(σ::MixedCell)
 
-Returns the mixed support obtained by replacing the chain of flats of `σ` with a tuple of hypersurfaces whose intersection equals the span of the corresponding fine structure cone.`
+Returns the mixed support obtained by replacing the chain of flats with a tuple of hypersurfaces whose intersection equals the span of the corresponding fine structure cone.
 """
-function transform_linear_support(σ::MixedCell)::MixedSupport
+function transform_linear_support(C::ChainOfFlats)::MixedSupport
     
-    Δ = active_support(σ)
-    gens = indicator_vector.(flats(chain_of_flats(σ)))
-    push!(gens, ones(Int, length(first(gens))))
+    gens = indicator_vector.(flats(C))
+    push!(gens, ones(Int, length(ground_set(matroid(C)))))
     # find basis of orthogonal complement of span(gens)
     gensMatrix = Oscar.matrix(gens)
     _, kernel = Oscar.nullspace(gensMatrix)
@@ -95,6 +94,6 @@ function transform_linear_support(σ::MixedCell)::MixedSupport
         push!(S, support([point(zeros(Int, length(p))), p], [0, 0]))
     end
 
-    println(pts)
-    return mixed_support((S..., supports(σ)...))
+
+    return mixed_support((S...))
 end

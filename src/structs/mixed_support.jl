@@ -16,6 +16,10 @@ function mixed_support(S::Tuple{Vararg{Support}})::MixedSupport
     return MixedSupport(S)
 end
 
+function mixed_support()::MixedSupport
+    return mixed_support(tuple())
+end
+
 function supports(Δ::MixedSupport)::Tuple{Vararg{Support}}
     return Δ.supports
 end
@@ -100,4 +104,8 @@ end
 
 function Base.:*(a::Height, Δ::MixedSupport)::MixedSupport
     return mixed_support(tuple([a * s for s in supports(Δ)]...))
+end
+
+function combine(Δ::MixedSupport, Ε::MixedSupport)
+    return mixed_support(tuple(supports(Δ)..., supports(Ε)...))
 end
