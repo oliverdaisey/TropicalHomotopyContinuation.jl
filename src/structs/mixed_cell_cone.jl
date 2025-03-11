@@ -201,3 +201,7 @@ function dot(Δ::MixedSupport, Ε::MixedSupport)
     pts = points(Δ)
     return sum([Δ[p] * Ε[p] for p in pts if p in points(Ε)])
 end
+
+function Base.in(κ::MixedCellConeFacet, Δ::MixedSupport)
+    return dot(Δ, κ) == 0
+end

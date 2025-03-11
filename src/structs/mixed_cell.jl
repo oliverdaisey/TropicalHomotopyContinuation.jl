@@ -97,3 +97,18 @@ function transform_linear_support(C::ChainOfFlats)::MixedSupport
 
     return mixed_support((S...))
 end
+
+@doc raw"""
+    swap(σ::MixedCell, p::Point, q::Point)
+
+Swap the point `p` for the new point `q` in the active support of the mixed cell candidate `σ`.
+"""
+function swap(σ::MixedCell, p::Point, q::Point)
+    Δ = active_support(σ)
+    S = supports(σ)
+    index = findfirst(x -> p in x, S)
+    newSupport = support(S[index], q)
+    newSupports = [S[i] for i in 1:length(S) if i != index]
+    push!(newSupports, newSupport)
+    return mixed_cell(mixed_support(newSupports), chain_of_flats(σ))
+end
