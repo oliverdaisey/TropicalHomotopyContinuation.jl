@@ -12,7 +12,7 @@ mySecondSupport = support([p5, p6, p7], [2, 1, 0])
 
 mixedSupport = mixed_support((mySupport, mySecondSupport))
 
-candidate = mixed_support((support([p3, p4], [0, 0]), support([p6, p7], [1, 0])))
+candidate = mixed_support((support([p1, p2], [0, 0]), support([p6, p7], [1, 0])))
 
 targetSupport = mixed_support((support([p1, p2, p3, p4], [0, 0, 0, 0]), support([p5, p6, p7], [2, 0, 3])))
 
@@ -29,4 +29,4 @@ pt, drift = tropical_intersection_point_and_drift(T, σ)
 println("intersection point = ", pt)
 println("tropical drift = ", drift)
 
-println(jensen_time(T, σ))
+# println(jensen_time(T, σ))

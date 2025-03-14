@@ -144,6 +144,16 @@ end
 Merge the mixed cell `σ` into the tracker `T`.
 """
 function merge_mixed_cell!(T::Tracker, σ::MixedCell)
+    # check if σ is already in the tracker
+    for τ in mixed_cells(T)
+        # the active supports need to be the same
+        if has_same_active_support(τ, σ)
+            # the chains of flats need to be the same
+            if chain_of_flats(τ) == chain_of_flats(σ)
+                return
+            end
+        end
+    end
     push!(T.mixedCells, σ)
 end
 

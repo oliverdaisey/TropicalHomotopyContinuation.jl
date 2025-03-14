@@ -14,7 +14,6 @@ include("structs/cayley_embedding.jl")
 include("structs/mixed_cell_cone.jl")
 include("jensen_move.jl")
 include("bergman_move.jl")
-
 include("../examples/bergman_and_jensen_moves_example.jl")
 
 end

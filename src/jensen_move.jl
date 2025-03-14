@@ -1,6 +1,6 @@
 using Oscar
 
-function jensen_time(T::Tracker, σ::MixedCell)::Union{QQFieldElem,Nothing}
+function jensen_time(T::Tracker, σ::MixedCell)::Union{QQFieldElem,PosInf}
     
     hypersurfaceDuals = transform_linear_support(chain_of_flats(σ))
 
@@ -8,12 +8,19 @@ function jensen_time(T::Tracker, σ::MixedCell)::Union{QQFieldElem,Nothing}
     Δ = combine(ambient_support(T), hypersurfaceDuals)
 
     C = mixed_cell_cone(δ, Δ)
-    
-    @assert δ in C "The mixed cell being tracked is not in the mixed cell cone."
+
+    @assert Δ in C "The mixed cell being tracked is not in the mixed cell cone."
 
     v = direction(T)
 
-    return minimum([dot(v, κ) != 0 ? -dot(v, δ) / dot(v, κ) : PosInf for κ in facets(C)])
+    timesOfIntersection = [dot(v, κ) != 0 ? -dot(κ, Δ) / dot(v, κ) : Nemo.PosInf() for κ in facets(C)]
+    # delete all times that are less than 0
+    timesOfIntersection = [t for t in timesOfIntersection if t > 0]
+    if timesOfIntersection == []
+        return Nemo.PosInf()
+    end
+    display(timesOfIntersection)
+    return minimum(timesOfIntersection)
     
 end
 
@@ -31,26 +38,28 @@ function jensen_flip(T::Tracker, σ::MixedCell)
 
     C = mixed_cell_cone(δ, Δ)
 
-    @assert sum([dot(v, κ) * tJensen == -dot(v, κ) for κ in facets(C)]) == 1 "The mixed cell being tracked does not breach its mixed cell cone in exactly one facet."
+    @assert sum([dot(v, κ) * tJensen == -dot(Δ, κ) for κ in facets(C)]) == 1 "The mixed cell being tracked does not breach its mixed cell cone in exactly one facet."
 
-    κ = findfirst(κ -> dot(v, κ) * tJensen == -dot(v, κ), facets(C))
+    κ = facets(C)[findfirst(κ -> dot(v, κ) * tJensen == -dot(Δ, κ), facets(C))]
     p = extra_point(κ)
+    changingSupport = supports(Δ)[findfirst(p in points(S) for S in supports(Δ))]
+    println("changingSupport = ", changingSupport)
+    # work out which mixed cell support this corresponds to (which active support)
+    changingDualCell = supports(σ)[findfirst(is_subset(S, changingSupport) for S in supports(σ))]
+    println("changingDualCell = ", changingDualCell)
 
+    @assert length(changingDualCell) == 2 "The changing dual cells is not minimal."
+    println("extra point = ", p)
     newMixedCells = MixedCell[]
-    
-    for q in points(δ)
+
+    for q in points(changingDualCell)
         if κ[q] > 0
-            # return mixed cell with q in support and p not in support
-            push!(newMixedCells, swap(σ, p, q))
+            # return mixed cell with p in support and q not in support
+            push!(newMixedCells, swap(σ, q, p))
         end
     end
 
-    for σ in newMixedCells
-        push!(T.mixedCells, σ)
-    end
-
-    # change the heights by jensen_time*direction
-    add_heights!(T, direction(T) * tJensen)
+    return newMixedCells
 end
 
 function jensen_move!(T::Tracker)
@@ -58,6 +67,8 @@ function jensen_move!(T::Tracker)
     # work out which mixed cell(s) have minimal Bergman time
     smallestTJensen = minimum([jensen_time(T, σ) for σ in mixed_cells(T)])
     changingMixedCells = [σ for σ in mixed_cells(T) if jensen_time(T, σ) == smallestTJensen]
+
+    println("Changing $(length(changingMixedCells)) mixed cells")
 
     newMixedCells = MixedCell[]
     for σ in changingMixedCells

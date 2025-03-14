@@ -14,7 +14,7 @@ function bergman_time(T::Tracker, σ::MixedCell)
 
     inequalities = linear_inequality_matrix(Oscar.facets(C))
     inequalities = Vector{QQFieldElem}[inequalities[i, :] for i in 1:nrows(inequalities)]
-    return minimum([dot(v, u) != 0 ? -dot(v, w) / dot(v, u) : PosInf for v in inequalities])
+    return minimum([dot(v, u) != 0 ? -dot(v, w) / dot(v, u) : Nemo.PosInf() for v in inequalities])
 end
 
 @doc raw"""
@@ -31,45 +31,48 @@ function bergman_flip(T::Tracker, σ::MixedCell)
     
     refinedChains = maximal_refinements(chain_of_flats(matroid(C), w + tBergman * u))
     # make sure not to include the original chain
-    refinedChains = [chain for chain in refinedChains if chain != C]
+    # refinedChains = [chain for chain in refinedChains if chain != C]
 
     rows = Vector{QQFieldElem}[]
+    for S in supports(active_support(σ))
+        pts = points(S)
+        p1 = first(pts)
+        for p in pts
+            if !isequal(p1, p)
+                push!(rows, convert(Vector{QQFieldElem}, p1 - p))
+            end
+        end
+    end
+    M = Oscar.matrix(QQ, rows)
+    println("Showing M")
+    display(M)
+
     allowedChains = ChainOfFlats[]
     for chain in refinedChains
-        # add rows for each indicator vector of chain
-        push!(rows, indicator_vector.(flats(chain))...)
+        # add columns for each indicator vector of chain
+        cols = Vector{QQFieldElem}[]
+        push!(cols, indicator_vector.(full_flats(chain))...)
+        A = transpose(Oscar.matrix(QQ, cols))
 
-        for S in supports(Δ)
-            pts = points(S)
-            p1 = first(pts)
-            localRows = Vector{QQFieldElem}[]
-            for p in pts
-                if !isequal(p1, p)
-                    push!(localRows, convert(Vector{QQFieldElem}, p1 - p))
-                end
-            end
-            # compute kernel of matrix given by rows
-            _, kernel = Oscar.nullspace(Oscar.matrix(QQ, localRows))
-            # push the columns of `kernel` into `rows`
-
-            # first convert kernel to list of vectors
-            kernel = Vector{QQFieldElem}[kernel[:, i] for i in 1:ncols(kernel)]
-            # then push each vector into `rows`
-            push!(rows, kernel...)
-        end
-
-        # check that `rows` has rank nonzero
-        if Oscar.rank(Oscar.matrix(QQ, rows)) == 0
+        println("Showing A")
+        display(A)
+        # create the matrix formed by the supports
+        if Oscar.rank(A) != Oscar.rank(M*A)
+            println("-----Rank fail-----")
             continue
         end
 
-        # check that dot product of sum of indicator vectors with drift is non zero
-        if dot(u, sum(indicator_vector.(flats(chain)))) <= 0
+        # check that dot product with maximal structure cone facet normal is positive
+        if dot(u, breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))) < 0
+            println("Dot product fail")
+            println("u = ", u)
+            println("breaking direction = ", breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u)))
             continue
         end
 
+        println("Chain ", chain, " is allowed")
         push!(allowedChains, chain)
-        
+
     end
 
     return mixed_cell.(Ref(active_support(σ)), allowedChains)

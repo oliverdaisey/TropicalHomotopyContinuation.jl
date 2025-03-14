@@ -79,6 +79,12 @@ function circuit(κ::MixedCellConeFacet)
     return κ.circuit
 end
 
+function Base.getindex(κ::MixedCellConeFacet, p::Point)
+    # return the height of point p in the circuit defining the facet
+    # return 0 if the mapping doesn't exist
+    return get(circuit(κ), p, 0)
+end
+
 function mixed_cell_cone(δ::MixedSupport, ambientSupport::MixedSupport)::MixedCellCone
 
     @assert length(δ) == length(ambientSupport) "Mixed cell candidate and ambient support must have the same number of supports."
@@ -102,8 +108,8 @@ function mixed_cell_cone(δ::MixedSupport, ambientSupport::MixedSupport)::MixedC
         submatrix = cayleyEmbedding[newMixedSupport]
         nontrivialEntries = Matrix(nullspace(Oscar.matrix(QQ, submatrix))[2])
 
-        # choose sign so that the entry corresponding to p is positive
-        if nontrivialEntries[findfirst(x -> x == p, pts)] < 0
+        # choose sign so that the entry corresponding to p is negative
+        if nontrivialEntries[findfirst(x -> x == p, pts)] > 0
             nontrivialEntries = -nontrivialEntries
         end
         
@@ -114,11 +120,24 @@ function mixed_cell_cone(δ::MixedSupport, ambientSupport::MixedSupport)::MixedC
         end
         circuit[p] = nontrivialEntries[findfirst(x -> x == p, pts)]
 
+        # final reality check
+        if circuit[p] > 0
+            for pt in keys(circuit)
+                circuit[pt] = -circuit[pt]
+            end
+        end
+
         push!(facets, mixed_cell_cone_facet(circuit, p))
 
     end
 
     return mixed_cell_cone(ambientSupport, facets)
+end
+
+function Base.show(io::IO, C::MixedCellConeFacet)
+
+    # print each support with their active points
+    println("Mixed cell cone facet with extra point $(extra_point(C))")
 end
 
 @doc raw"""
@@ -143,8 +162,12 @@ function Base.in(Δ::MixedSupport, C::MixedCellCone)
     for κ in facets(C)
         push!(dotProducts, sum([QQ(circuit(κ)[p]) * QQ(Δ[p]) for p in pts if p in keys(circuit(κ))]))
     end
-
-    return all(dotProducts .< 0)
+    
+    if all(dotProducts .<= 0)
+        return true
+    else
+        return false
+    end
 end
 
 @doc raw"""
@@ -189,8 +212,7 @@ end
 import Oscar.dot
 
 function dot(Δ::MixedSupport, κ::MixedCellConeFacet)
-    pts = points(Δ)
-    return sum([QQ(circuit(κ)[p]) * QQ(Δ[p]) for p in pts if p in keys(circuit(κ))])
+    return sum([QQ(circuit(κ)[p]) * QQ(Δ[p]) for p in keys(circuit(κ)) if !isinf(Δ[p])])
 end
 
 function dot(κ::MixedCellConeFacet, Δ::MixedSupport)
@@ -199,7 +221,7 @@ end
 
 function dot(Δ::MixedSupport, Ε::MixedSupport)
     pts = points(Δ)
-    return sum([Δ[p] * Ε[p] for p in pts if p in points(Ε)])
+    return sum([Δ[p] * Ε[p] for p in pts])
 end
 
 function Base.in(κ::MixedCellConeFacet, Δ::MixedSupport)

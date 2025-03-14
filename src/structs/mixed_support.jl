@@ -93,6 +93,10 @@ function mixed_support(ambientSupport::MixedSupport, oldSupport::Support, newSup
 end
 
 function Base.getindex(Δ::MixedSupport, p::Point)
+    index = findfirst(s -> in(p, s), supports(Δ))
+    if isnothing(index)
+        return Nemo.PosInf()
+    end
     memberSupport = supports(Δ)[findfirst(s -> in(p, s), supports(Δ))]
     @assert !isnothing(memberSupport) "The point $p is not in the mixed support"
     return memberSupport[p]

@@ -88,14 +88,13 @@ function transform_linear_support(C::ChainOfFlats)::MixedSupport
     kernel = [kernel[:, i] for i in 1:ncols(kernel)]
     # add the vectors to pts
     pts = [point(g) for g in kernel]
-
     S = Support[]
     for p in pts
         push!(S, support([point(zeros(Int, length(p))), p], [0, 0]))
     end
 
 
-    return mixed_support((S...))
+    return mixed_support(tuple(S...))
 end
 
 @doc raw"""
@@ -107,8 +106,32 @@ function swap(σ::MixedCell, p::Point, q::Point)
     Δ = active_support(σ)
     S = supports(σ)
     index = findfirst(x -> p in x, S)
+    # remove p from this support
     newSupport = support(S[index], q)
+    # remove the key corresponding to p
+    delete!(newSupport.entries, p)
     newSupports = [S[i] for i in 1:length(S) if i != index]
     push!(newSupports, newSupport)
-    return mixed_cell(mixed_support(newSupports), chain_of_flats(σ))
+    return mixed_cell(mixed_support(tuple(newSupports...)), chain_of_flats(σ))
+end
+
+function has_same_active_support(σ::MixedCell, τ::MixedCell)
+    if length(supports(σ)) != length(supports(τ))
+        return false
+    end
+
+    # each support should be a subset of another support
+    for S in supports(σ)
+        if !any([is_subset(S, T) for T in supports(τ)])
+            return false
+        end
+    end
+    for T in supports(τ)
+        if !any([is_subset(T, S) for S in supports(σ)])
+            return false
+        end
+    end
+
+    return true
+
 end

@@ -258,6 +258,10 @@ function chain_of_flats(M::Union{RealisableMatroid,Matroid}, w::TropicalPoint)
 
 end
 
+function full_flats(C::ChainOfFlats)
+    return [empty_flat(matroid(C)); flats(C); ground_flat(matroid(C))]
+end
+
 @doc raw"""
     loopless_face(C::ChainOfFlats)
 
@@ -438,7 +442,7 @@ function maximal_refinements(C::ChainOfFlats)::Vector{ChainOfFlats}
             # We want candidates strictly between F and G, and the candidate must be a flat.
             # (Since candidate = closure(candidate) by construction, it is a flat.)
             if basis(F) ⊊ candidate && candidate ⊊ basis(G)
-                push!(candidates, candidate)
+                push!(candidates, Set(candidate))
             end
         end
         return [Flat(mat, s) for s in candidates]
@@ -493,7 +497,7 @@ function closure(M::Matroid, elements::Set{Int})
             return f
         end
     end
-    return collect(ground_set(M))  # Default if no flat is found
+    return ground_set(M)  # Default if no flat is found
     
 end
 
@@ -516,4 +520,24 @@ function closure(M::RealisableMatroid, elements::Set{Int})
     end
 
     return elements
+end
+
+function breaking_direction(maximalChainOfFlats::ChainOfFlats, nonmaximalChainOfFlats::ChainOfFlats)
+
+    M = matroid(maximalChainOfFlats)
+    @assert M == matroid(nonmaximalChainOfFlats) "The matroids of the chains of flats must be the same"
+
+    maximalChain = full_flats(maximalChainOfFlats)
+    nonMaximalChain = full_flats(nonmaximalChainOfFlats)
+
+    # find the first flat that is different
+    changingFlat = 0
+    for i in 1:length(maximalChain)
+        if maximalChain[i] != nonMaximalChain[i]
+            changingFlat = i
+            break
+        end
+    end
+
+    return 2*indicator_vector(maximalChain[changingFlat]) - indicator_vector(maximalChain[changingFlat+1]) - indicator_vector(maximalChain[changingFlat - 1])
 end

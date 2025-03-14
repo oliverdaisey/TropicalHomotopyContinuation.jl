@@ -15,6 +15,10 @@ function entries(s::Support)
     return s.entries
 end
 
+function Base.length(s::Support)
+    return length(entries(s))
+end
+
 function support(points, heights)::Support
     @assert length(points) == length(heights) "The number of points and heights must be the same"
     @assert all(p -> length(p) == length(points[1]), points) "All points must have the same dimension"
