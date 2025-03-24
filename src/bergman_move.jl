@@ -14,7 +14,14 @@ function bergman_time(T::Tracker, σ::MixedCell)
 
     inequalities = linear_inequality_matrix(Oscar.facets(C))
     inequalities = Vector{QQFieldElem}[inequalities[i, :] for i in 1:nrows(inequalities)]
-    return minimum([dot(v, u) != 0 ? -dot(v, w) / dot(v, u) : Nemo.PosInf() for v in inequalities])
+
+    timesOfIntersection = [dot(v, u) != 0 ? -dot(v, w) / dot(v, u) : Nemo.PosInf() for v in inequalities]
+    # delete all times that are less than 0
+    timesOfIntersection = [t for t in timesOfIntersection if t > 0]
+    if timesOfIntersection == []
+        return Nemo.PosInf()
+    end
+    return minimum(timesOfIntersection)
 end
 
 @doc raw"""
@@ -44,8 +51,6 @@ function bergman_flip(T::Tracker, σ::MixedCell)
         end
     end
     M = Oscar.matrix(QQ, rows)
-    println("Showing M")
-    display(M)
 
     allowedChains = ChainOfFlats[]
     for chain in refinedChains
@@ -53,24 +58,16 @@ function bergman_flip(T::Tracker, σ::MixedCell)
         cols = Vector{QQFieldElem}[]
         push!(cols, indicator_vector.(full_flats(chain))...)
         A = transpose(Oscar.matrix(QQ, cols))
-
-        println("Showing A")
-        display(A)
         # create the matrix formed by the supports
         if Oscar.rank(A) != Oscar.rank(M*A)
-            println("-----Rank fail-----")
             continue
         end
 
-        # check that dot product with maximal structure cone facet normal is positive
-        if dot(u, breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))) < 0
-            println("Dot product fail")
-            println("u = ", u)
-            println("breaking direction = ", breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u)))
+        
+        if dot(u, breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))) <= 0
             continue
         end
 
-        println("Chain ", chain, " is allowed")
         push!(allowedChains, chain)
 
     end
@@ -105,4 +102,11 @@ function bergman_move!(T::Tracker)
         merge_mixed_cell!(T, σ)
     end
 
+end
+
+# orthogonal projection away from subspace spanned by columns of kernelMatrix
+function projection_matrix(kernelMatrix)
+    _, invKernelMatrix = Oscar.is_invertible_with_inverse(transpose(kernelMatrix) * kernelMatrix)
+
+    return kernelMatrix * invKernelMatrix * transpose(kernelMatrix)
 end

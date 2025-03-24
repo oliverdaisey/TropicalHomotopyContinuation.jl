@@ -47,7 +47,7 @@ function Base.show(io::IO, C::MixedCellCone)
     print(io, "Mixed cell cone with $(length(facets(C))) facets")
 end
 
-function Base.show(io::IO, F::MixedCellConeFacet)
+function (io::IO, F::MixedCellConeFacet)
 
     print(io, "Mixed cell cone facet corresponding to point $(extra_point(F))")
 end

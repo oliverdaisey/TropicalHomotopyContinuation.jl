@@ -1,4 +1,3 @@
-
 @doc raw"""
     Tracker
 
@@ -141,7 +140,7 @@ end
 @doc raw"""
     merge_mixed_cell!(T::Tracker, σ::MixedCell)
 
-Merge the mixed cell `σ` into the tracker `T`.
+Merge the mixed cell `σ` into the tracker `T`. If the mixed cell is already in the tracker, do nothing.
 """
 function merge_mixed_cell!(T::Tracker, σ::MixedCell)
     # check if σ is already in the tracker

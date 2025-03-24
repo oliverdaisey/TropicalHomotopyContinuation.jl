@@ -44,13 +44,45 @@ w, u = tropical_intersection_point_and_drift(T, candidateOne)
 println("candidate two")
 w, u = tropical_intersection_point_and_drift(T, candidateTwo)
 
-jensen_move!(T)
-
-println("Printing new mixed cells")
+println("Printing mixed cells")
 for σ in mixed_cells(T)
     println(σ)
     println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
-    println("jensen time = ", jensen_time(T, σ))
-    println("bergman time = ", bergman_time(T, σ))
+    println(" ")
+end
+
+move!(T)
+
+println("Printing new mixed cells after move 1")
+for σ in mixed_cells(T)
+    println(σ)
+    println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
+    println(" ")
+end
+
+move!(T)
+
+println("Printing new mixed cells after move 2")
+for σ in mixed_cells(T)
+    println(σ)
+    println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
+    println(" ")
+end
+
+move!(T)
+
+println("Printing new mixed cells after move 3")
+for σ in mixed_cells(T)
+    println(σ)
+    println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
+    println(" ")
+end
+
+move!(T)
+
+println("Printing new mixed cells after move 4")
+for σ in mixed_cells(T)
+    println(σ)
+    println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
     println(" ")
 end

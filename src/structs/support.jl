@@ -95,3 +95,34 @@ end
 function Base.:*(w::Height, s::Support)::Support
     return Support(Dict((p, w * h) for (p, h) in entries(s)))
 end
+
+@doc raw"""
+    merge(S::Support, T::Support)
+
+Merges the support `T into the support `S`. Keeps the heights of `S` by default.
+"""
+function merge(S::Support, T::Support)
+    # Create a new dictionary to store the merged entries
+    merged_entries = Dict{Point, Height}()
+    
+    # Copy all entries from S
+    for (point, height) in S.entries
+        merged_entries[point] = height
+    end
+    
+    # Add entries from T, but only for points that don't exist in S
+    for (point, height) in T.entries
+        if !haskey(merged_entries, point)
+            merged_entries[point] = height
+        end
+    end
+    
+    # Return a new Support with the merged entries
+    return Support(merged_entries)
+end
+
+function support(f::TropicalPolynomial)::Support
+
+    return support(point.(collect(exponents(f))), collect(coefficients(f)))
+
+end

@@ -1,5 +1,10 @@
 using Oscar
 
+@doc raw"""
+    jensen_time(T::Tracker, σ::MixedCell)
+
+Return the time at which the mixed cell candidate `σ` breaches its mixed cell cone.
+"""
 function jensen_time(T::Tracker, σ::MixedCell)::Union{QQFieldElem,PosInf}
     
     hypersurfaceDuals = transform_linear_support(chain_of_flats(σ))
@@ -19,7 +24,6 @@ function jensen_time(T::Tracker, σ::MixedCell)::Union{QQFieldElem,PosInf}
     if timesOfIntersection == []
         return Nemo.PosInf()
     end
-    display(timesOfIntersection)
     return minimum(timesOfIntersection)
     
 end
@@ -43,13 +47,10 @@ function jensen_flip(T::Tracker, σ::MixedCell)
     κ = facets(C)[findfirst(κ -> dot(v, κ) * tJensen == -dot(Δ, κ), facets(C))]
     p = extra_point(κ)
     changingSupport = supports(Δ)[findfirst(p in points(S) for S in supports(Δ))]
-    println("changingSupport = ", changingSupport)
     # work out which mixed cell support this corresponds to (which active support)
     changingDualCell = supports(σ)[findfirst(is_subset(S, changingSupport) for S in supports(σ))]
-    println("changingDualCell = ", changingDualCell)
 
     @assert length(changingDualCell) == 2 "The changing dual cells is not minimal."
-    println("extra point = ", p)
     newMixedCells = MixedCell[]
 
     for q in points(changingDualCell)
@@ -62,13 +63,16 @@ function jensen_flip(T::Tracker, σ::MixedCell)
     return newMixedCells
 end
 
+@doc raw"""
+    jensen_move!(T::Tracker)
+
+Perform a Jensen move on the tracker `T`.
+"""
 function jensen_move!(T::Tracker)
     
     # work out which mixed cell(s) have minimal Bergman time
     smallestTJensen = minimum([jensen_time(T, σ) for σ in mixed_cells(T)])
     changingMixedCells = [σ for σ in mixed_cells(T) if jensen_time(T, σ) == smallestTJensen]
-
-    println("Changing $(length(changingMixedCells)) mixed cells")
 
     newMixedCells = MixedCell[]
     for σ in changingMixedCells

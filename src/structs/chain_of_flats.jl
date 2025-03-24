@@ -231,6 +231,7 @@ Note that is required that the length of `w` is equal to the size of the ground 
 function chain_of_flats(M::Union{RealisableMatroid,Matroid}, w::TropicalPoint)
     @assert length(w) == length(ground_set(M)) "The tropical point must have the same length as the ground set of the matroid"
 
+    w = -w
     # Create a dictionary to group indices by their values
     value_indices = Dict{eltype(w),Vector{Int}}()
 

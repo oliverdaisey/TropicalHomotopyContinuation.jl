@@ -1,6 +1,7 @@
 export Point, point, minkowski_sum, entries
 
 const TropicalPoint = Union{Vector{QQFieldElem}, Vector{Int}}
+const TropicalPolynomial = AbstractAlgebra.Generic.MPoly{TropicalSemiringElem{typeof(min)}}
 
 @doc raw"""
     Point
