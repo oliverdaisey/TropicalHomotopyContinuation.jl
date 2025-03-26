@@ -96,6 +96,8 @@ function Base.:*(w::Height, s::Support)::Support
     return Support(Dict((p, w * h) for (p, h) in entries(s)))
 end
 
+import Base.merge
+
 @doc raw"""
     merge(S::Support, T::Support)
 

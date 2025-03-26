@@ -1,14 +1,14 @@
-p1 = point(0,0,0,2)
+p1 = point(0,0,0,1)
 p2 = point(0,0,0,0)
 
-p3=point(-1,-1,-1,0)
+p3=point(1,1,0,0)
 p4=point(0,0,0,0)
 
 f3 = support([p1,p2],[0,0])
-f4 = support([p3,p4],[0,2])
+f4 = support([p3,p4],[0,-2])
 
 f3Target = support([p1,p2],[0,0])
-f4Target = support([p3,p4],[0,-1])
+f4Target = support([p3,p4],[0,1])
 
 mixedSupport = mixed_support((f3,f4))
 targetSupport = mixed_support((f3Target,f4Target))
@@ -21,10 +21,6 @@ println("loopless face = ", loopless_face(chainOfFlats))
 candidate = mixed_cell(mixed_support((support([p1,p2],[0,0]),support([p3,p4],[0,2]))), chainOfFlats)
 
 T = tracker(mixedSupport, [candidate], [targetSupport])
-
-println("Computing mixed cell cone")
-C = mixed_cell_cone(candidate, mixedSupport)
-println("Mixed cell cone = ", C)
 
 # show the heights of T before the bergman move
 println(" ")
@@ -43,9 +39,9 @@ for σ in mixed_cells(T)
     println(" ")
 end
 
+println("bergman time = ", bergman_time(T, candidate))
 println("* bergman move *")
-bergman_move!(T)
-
+move!(T)
 # show the heights of T after the bergman move
 println(" ")
 println("heights after Bergman move")
@@ -61,10 +57,4 @@ for σ in mixed_cells(T)
     println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
     println("loopless face = ", loopless_face(chain_of_flats(σ)))
     println(" ")
-end
-
-add_heights!(T, direction(T))
-
-for σ in mixed_cells(T)
-    println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
 end

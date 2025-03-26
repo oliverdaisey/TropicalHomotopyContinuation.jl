@@ -57,14 +57,18 @@ function bergman_flip(T::Tracker, σ::MixedCell)
         # add columns for each indicator vector of chain
         cols = Vector{QQFieldElem}[]
         push!(cols, indicator_vector.(full_flats(chain))...)
+        # remove all zero vector from cols
+        cols = [col for col in cols if col != zeros(QQ, length(col))]
         A = transpose(Oscar.matrix(QQ, cols))
+
         # create the matrix formed by the supports
         if Oscar.rank(A) != Oscar.rank(M*A)
             continue
         end
-
         
-        if dot(u, breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))) <= 0
+        Π = oblique_projection_matrix(A, transpose(M))
+
+        if dot(Π*u, breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))) <= 0
             continue
         end
 
@@ -109,4 +113,15 @@ function projection_matrix(kernelMatrix)
     _, invKernelMatrix = Oscar.is_invertible_with_inverse(transpose(kernelMatrix) * kernelMatrix)
 
     return kernelMatrix * invKernelMatrix * transpose(kernelMatrix)
+end
+
+@doc raw"""
+    oblique_projection_matrix(A::Matrix, B::Matrix)
+
+Compute the oblique projection matrix from the subspace spanned by the columns of `A` onto the subspace spanned by the columns of `B`.
+"""
+function oblique_projection_matrix(A, B)
+    println("A = ", A)
+    println("B = ", B)
+    return A*(transpose(B)*A)^(-1)*transpose(B)
 end

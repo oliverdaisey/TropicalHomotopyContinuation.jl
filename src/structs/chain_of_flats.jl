@@ -533,7 +533,7 @@ function breaking_direction(maximalChainOfFlats::ChainOfFlats, nonmaximalChainOf
 
     # find the first flat that is different
     changingFlat = 0
-    for i in 1:length(maximalChain)
+    for i in 2:length(maximalChain)
         if maximalChain[i] != nonMaximalChain[i]
             changingFlat = i
             break

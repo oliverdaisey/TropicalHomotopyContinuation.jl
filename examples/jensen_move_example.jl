@@ -28,5 +28,3 @@ pt, drift = tropical_intersection_point_and_drift(T, σ)
 
 println("intersection point = ", pt)
 println("tropical drift = ", drift)
-
-# println(jensen_time(T, σ))
