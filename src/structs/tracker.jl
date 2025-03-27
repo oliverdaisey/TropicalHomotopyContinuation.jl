@@ -59,7 +59,22 @@ Return the direction of the tracker `T`. This is the difference between the firs
 function direction(T::Tracker)
     # TODO: If points go to infinity, make sure the points that stay finite are the same in the target and ambient support
     # TODO: In the infinity case, normalize direction to be a 0/1 vector
-    return first(targets(T)) - ambient_support(T)
+    dir = first(targets(T)) - ambient_support(T)
+    if any(isinf.(heights(dir)))
+        # every height should be either infinity or 0
+        @assert all(h -> h == 0 || isinf(h), heights(dir)) "Invalid direction for tracker"
+        for p in points(dir)
+            if isinf(dir[p])
+                update_height!(dir, p, QQ(1))
+            end
+        end
+    end
+
+    return dir
+end
+
+function Base.:-(::Nemo.PosInf, ::Nemo.QQFieldElem)
+    return Nemo.PosInf()
 end
 
 function Base.show(io::IO, T::Tracker)
@@ -176,4 +191,64 @@ function add_heights!(T::Tracker, Δ::MixedSupport)
             update_height!(S, p, ambient_support(T)[p] + Δ[p])
         end
     end
+end
+
+@doc raw"""
+    tracker(startingSupport::MixedSupport, targetSupport::MixedSupport, mixedCells::Vector{MixedCell})::Tracker
+
+Construct a tracker for a list of mixed cells. Tracks heights that need to go to infinity one at a time. Then tracks finite heights along a straight line to the target heights all at once.
+
+The starting support needs to be a superset of the target support.
+"""
+function tracker(startingSupport::MixedSupport, targetSupport::MixedSupport, mixedCells::Vector{MixedCell})::Tracker
+
+    @assert is_subset(targetSupport, startingSupport) "The target support needs to be a subset of the starting support."
+
+    targets = Vector{MixedSupport}()
+    push!(targets, startingSupport)
+    # Work out which heights need to go to infinity
+    for p in points(startingSupport)
+        if isinf(targetSupport[p])
+            # take the latest support in `targets` and set the height of `p` to infinity
+            newTarget = copy(last(targets))
+            update_height!(newTarget, p, Nemo.PosInf())
+            push!(targets, newTarget)
+        end
+    end
+
+    # at this point no more heights need to be set to infinity, so go to the target heights all at once
+    push!(targets, targetSupport)
+
+    # the first support in the list is the starting support, remove it
+    targets = targets[2:end]
+
+    return tracker(startingSupport, mixedCells, targets)
+
+    
+end
+
+function rebase!(T::Tracker, Δ::MixedSupport)
+    # remove any points from T whose height is infinity in Δ
+
+    for p in points(ambient_support(T))
+        if isinf(Δ[p])
+            for S in supports(ambient_support(T))
+                if in(p, S)
+                    # remove p from the keys of the entries of S
+                    delete!(entries(S), p)
+                end
+            end
+
+            # if any of the mixed cells involve p, remove them
+
+            for σ in mixed_cells(T)
+                if p in points(σ)
+                    remove_mixed_cell!(T, σ)
+                end
+            end
+        end
+    end
+
+    # remove the first target from the list of targets
+    T.targets = T.targets[2:end]
 end

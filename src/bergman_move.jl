@@ -121,7 +121,5 @@ end
 Compute the oblique projection matrix from the subspace spanned by the columns of `A` onto the subspace spanned by the columns of `B`.
 """
 function oblique_projection_matrix(A, B)
-    println("A = ", A)
-    println("B = ", B)
     return A*(transpose(B)*A)^(-1)*transpose(B)
 end

@@ -16,6 +16,10 @@ function mixed_support(S::Tuple{Vararg{Support}})::MixedSupport
     return MixedSupport(S)
 end
 
+function mixed_support(S::Vector{Support})::MixedSupport
+    return mixed_support(tuple(S...))
+end
+
 function mixed_support()::MixedSupport
     return mixed_support(tuple())
 end
@@ -31,6 +35,10 @@ end
 function Base.show(io::IO, Δ::MixedSupport)
 
     print(io, "Mixed support involving $(length(supports(Δ))) point supports")
+end
+
+function Base.copy(Δ::MixedSupport)
+    return mixed_support(tuple(copy.(supports(Δ))...))
 end
 
 @doc raw"""
@@ -112,4 +120,27 @@ end
 
 function combine(Δ::MixedSupport, Ε::MixedSupport)
     return mixed_support(tuple(supports(Δ)..., supports(Ε)...))
+end
+
+function update_height!(Δ::MixedSupport, p::Point, w::Height)
+    for s in supports(Δ)
+        update_height!(s, p, w)
+    end
+end
+
+function heights(Δ::MixedSupport)
+    hts = Height[]
+    for s in supports(Δ)
+        append!(hts, heights(s))
+    end
+    return hts
+end
+
+function dump_info(Δ::MixedSupport)
+    returnString = ""
+    for (i, S) in enumerate(supports(Δ))
+        returnString *= "Support S_$(i) = {" * join(["$p↑$(w)" for (p, w) in entries(S)], ", ") * "}. "
+    end
+
+    return returnString
 end

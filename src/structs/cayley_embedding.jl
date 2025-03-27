@@ -86,7 +86,7 @@ Given a mixed support where each support is a subset of the supports of `cayley`
 """
 function Base.getindex(cayley::CayleyEmbedding, indices::MixedSupport)
 
-    @assert is_subset(indices, supports(cayley)) "The indices must be a subset of the supports of the Cayley embedding (got $indices, not a subset of $(supports(cayley)))"
+    @assert is_subset(indices, supports(cayley)) "The indices must be a subset of the supports of the Cayley embedding (got $(supports(indices)), not a subset of $(supports(supports(cayley))))"
 
     return matrix(indices)
 

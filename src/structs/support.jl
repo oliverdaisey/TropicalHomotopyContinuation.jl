@@ -19,6 +19,10 @@ function Base.length(s::Support)
     return length(entries(s))
 end
 
+function Base.copy(s::Support)
+    return Support(copy(entries(s)))
+end
+
 function support(points, heights)::Support
     @assert length(points) == length(heights) "The number of points and heights must be the same"
     @assert all(p -> length(p) == length(points[1]), points) "All points must have the same dimension"
@@ -41,8 +45,17 @@ end
 
 function Base.:-(s::Support, t::Support)::Support
 
-    @assert length(points(s)) == length(points(t)) "The number of points in the supports must be the same"
-    return Support(mergewith(-)(entries(s), entries(t)))
+
+    # create a new dictionary to store the entries
+    new_entries = Dict{Point, Height}()
+
+    # for each point in the union, subtract the heights
+    
+    for p in points(t)
+        new_entries[p] = get(entries(s), p, Nemo.PosInf()) - get(entries(t), p, Nemo.PosInf())
+    end
+
+    return Support(new_entries)
     
 end
 
@@ -101,7 +114,9 @@ import Base.merge
 @doc raw"""
     merge(S::Support, T::Support)
 
-Merges the support `T into the support `S`. Keeps the heights of `S` by default.
+Merges the support `T into the support `S`. Keeps the heights of `S` by default. Replaces points in `S` with points in `T` if they have the same entries.
+
+This requires comparing the points by their entries.
 """
 function merge(S::Support, T::Support)
     # Create a new dictionary to store the merged entries
@@ -113,9 +128,21 @@ function merge(S::Support, T::Support)
     end
     
     # Add entries from T, but only for points that don't exist in S
-    for (point, height) in T.entries
-        if !haskey(merged_entries, point)
-            merged_entries[point] = height
+    for (pt, ht) in T.entries
+        # does there exist a key with the same entries as point?
+        # if there exists a key with entries(key) == entries(point), then we don't add point to the merged entries
+        if !any([entries(p) == entries(pt) for p in points(S)])
+            merged_entries[pt] = ht
+        else
+            # replace the point in T with the point in S
+            for p in points(S)
+                if entries(p) == entries(pt)
+                    # remove pt as a key from T, and add p as a key with the height of pt
+                    merged_entries[p] = S[p]
+                    delete!(T.entries, pt)
+                    T.entries[p] = ht
+                end
+            end
         end
     end
     
@@ -127,4 +154,23 @@ function support(f::TropicalPolynomial)::Support
 
     return support(point.(collect(exponents(f))), collect(coefficients(f)))
 
+end
+
+function heights(S::Support)
+    return collect(values(entries(S)))
+end
+
+import LinearAlgebra.dot
+
+function dot(w::TropicalPoint, p::Point)
+    return sum(w .* entries(p))
+end
+
+@doc raw"""
+    minimum_monomials(S::Support, w::TropicalPoint)
+
+Returns the monomials `m` in the support `S` where the minimum of $ m \cdot w + S[m] $ is achieved.
+"""
+function minimum_monomials(S::Support, w::TropicalPoint)
+    return [m for m in points(S) if all(dot(w, m) + S[m] <= dot(w, p) + S[p] for p in points(S))]
 end

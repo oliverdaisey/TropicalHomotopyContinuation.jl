@@ -17,31 +17,27 @@ include("bergman_move.jl")
 include("homotopy.jl")
 include("starting_system.jl")
 
-# M = matroid(Oscar.matrix(QQ, [-1 -2 -3 -4; 11 13 15 19]))
 
-# p1 = point(0,0,0,1)
-# p2 = point(0,0,0,0)
+# M = matroid(Oscar.matrix(QQ, [1 1 0 0 0 1 1 0 0 0; -1 0 -1 -1 0 -1 0 -1 -1 0; 0 -1 1 0 -1 0 -1 1 0 -1; 0 0 0 1 1 0 0 0 1 1]))
+# targetSupports = Support[]
+# # M = matroid(Oscar.matrix(QQ, [1 1 0 0 0 0 0 0 0 ; -1 0 -1 -1 0 0 0 0 0 ; 0 -1 1 0 -1 0 0 0 0 ; 0 0 0 1 1 0 0 0 0 ; 0 0 0 0 0 1 1 0 0 ; 0 0 0 0 0 -1 0 -1 -1 ; 0 0 0 0 0 0 -1 1 0 ; 0 0 0 0 0 0 0 0 1 1]))
+# for i in [1,2,3,4,5]
+#         pi = point([n in [i,i+5] ? 1 : 0 for n in 1:10])
+#         p0 = point([0 for n in 1:10])
+#         push!(targetSupports, support([pi,p0],[0,0]))
+# end
 
-# p3 = point(0,0,0,0)
-# p4 = point(0,1,1,0)
-# p5 = point(0,2,0,0)
-# p6 = point(0,0,2,0)
-# p7 = point(0,2,2,0)
+# targetSupport = mixed_support(targetSupports)
 
-# t = -3
-# hts = [0, -3 + t, 0 + 2*t, -4, -4 + 2*t]
-# println("hts = ", hts)
-# f1 = support([p1,p2],[0,0])
-# f2 = support([p3,p4,p5,p6,p7],hts)
-# t = 3
-# hts = [0, -3 + t, 0 + 2*t, -4, -4 + 2*t]
-# f2Target = support([p3,p4,p5,p6,p7],hts)
-# targetSupport = mixed_support((f1,f2Target))
+# for S in supports(targetSupport)
+#     println(S)
+# end
+# # # NEW EXAMPLE
 
-# w = starting_data(targetSupport, M)
+# Δ, σ = starting_data(targetSupport, M)
 
-# println("w = ", w)
+# T = tracker(Δ, targetSupport, [σ])
 
-include("../examples/bergman_move_example.jl")
+# display(stable_intersection(T))
 
 end 
