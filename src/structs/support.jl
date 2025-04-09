@@ -1,4 +1,4 @@
-export vector_of_points, points
+export Support, entries, heights, support, is_subset, vector_of_points, points
 
 @doc raw"""
     Support
@@ -155,12 +155,6 @@ function support(f::TropicalPolynomial)::Support
     return support(point.(collect(exponents(f))), collect(coefficients(f)))
 
 end
-
-function heights(S::Support)
-    return collect(values(entries(S)))
-end
-
-import LinearAlgebra.dot
 
 function dot(w::TropicalPoint, p::Point)
     return sum(w .* entries(p))

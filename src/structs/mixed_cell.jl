@@ -1,3 +1,5 @@
+export MixedCell, mixed_cell, points, chain_of_flats, active_support, supports, swap, has_same_active_support
+
 @doc raw"""
     MixedCellCandidate
 
@@ -110,8 +112,8 @@ function swap(σ::MixedCell, p::Point, q::Point)
     newSupport = support(S[index], q)
     # remove the key corresponding to p
     delete!(newSupport.entries, p)
-    newSupports = [S[i] for i in 1:length(S) if i != index]
-    push!(newSupports, newSupport)
+    newSupports = [S[i] for i in 1:length(S)]
+    newSupports[index] = newSupport
     return mixed_cell(mixed_support(tuple(newSupports...)), chain_of_flats(σ))
 end
 
@@ -132,6 +134,60 @@ function has_same_active_support(σ::MixedCell, τ::MixedCell)
         end
     end
 
+    return true
+
+end
+
+function is_transverse(σ::MixedCell)
+
+    Δ = active_support(σ)
+
+    rows = Vector{Int}[]
+
+    # add in rows from chain of flats
+    pts = loopless_face(chain_of_flats(σ))
+    p1 = first(pts)
+
+    for p in pts
+        if !isequal(p1, p)
+            push!(rows, p1 - p)
+        end
+    end
+
+    for S in supports(Δ)
+        p1 = first(points(S))
+        for p in points(S)
+            if !isequal(p1, p)
+                push!(rows, p1 - p)
+            end
+        end
+    end
+
+    flag, _ = Oscar.is_invertible_with_inverse(Oscar.matrix(QQ, rows))
+
+    return flag
+
+end
+
+function are_support_heights_finite(T::Tracker, σ::MixedCell)
+    Δ = ambient_support(T)
+    for p in points(active_support(σ))
+        if isinf(Δ[p])
+            return false
+        end
+    end
+    
+    return true
+
+end
+
+function are_support_heights_finite(Δ::MixedSupport, σ::MixedCell)
+    for p in points(active_support(σ))
+        if isinf(Δ[p])
+            return false
+        end
+    end
+    
     return true
 
 end

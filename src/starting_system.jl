@@ -1,3 +1,5 @@
+export starting_data
+
 @doc raw"""
     starting_data(targetΔ::MixedSupport, M::RealisableMatroid)
 
@@ -54,7 +56,7 @@ function starting_data(targetΔ::MixedSupport, M::RealisableMatroid)
                 monomial *= x[i]^exponentVector[i]
             end
             # make sure that the vertices of the simplex are lifted lower than everything inside targetΔ
-            f += TT(QQ(min([targetΔ[p] for p in points(targetΔ)]...)) - QQ(rand(33:1000)))*monomial
+            f += TT(QQ(min([targetΔ[p] for p in points(targetΔ)]...)) - QQ(rand(UInt8)))*monomial
         end
         @debug "Starting polynomial: $f"
         push!(startingPolynomials, f)
@@ -62,7 +64,7 @@ function starting_data(targetΔ::MixedSupport, M::RealisableMatroid)
     end
 
     @debug "Finished computing all starting polynomials"
-    @debug "Finding the tropical point corresponding to system $(startingPolynomials) with the realisation matrix $(matrix(M))"
+    @debug "Finding the tropical point corresponding to system $(startingPolynomials) with the linear equation matrix $(matrix(M))"
     w = find_tropical_point(startingPolynomials, M)
     @debug "Found tropical point: $w"
     C = chain_of_flats(M, QQ.(w))
@@ -109,6 +111,11 @@ function starting_data(targetΔ::MixedSupport, M::RealisableMatroid)
     @debug "Mixed support: $(dump_info(Δ))"
 
     @debug "Finished computing starting data"
+
+    @assert is_subset(active_support(σ), Δ) "The active support of the mixed cell is not a subset of the mixed support."
+
+    @assert is_transverse(σ) "The mixed cell is not transverse."
+    @assert are_support_heights_finite(Δ, σ) "$(σ) has invalid mixed height data"
     return Δ, σ
 end
 
@@ -135,20 +142,23 @@ function find_tropical_point(polynomials::Vector{TropicalPolynomial}, M::Realisa
 
     A = Oscar.matrix(R, rows)
     # for now, test whether this is working correctly so far
+    linearIdealMatrix = Oscar.matrix(QQ, transpose(Oscar.nullspace(matrix(M))[2]))
     equationsMatrix = vcat(R.(matrix(M)), A)
+    equationsMatrix = vcat(R.(linearIdealMatrix), A)
 
     # right hand side of the equations is 0 for the matroid parts
     b = zeros(R, nrows(equationsMatrix))
-    for i in 1:nrows(matrix(M))
+    for i in 1:nrows(linearIdealMatrix)
         b[i] = R(0)
     end
     for i in 1:length(liftedPolynomials)
-        b[nrows(matrix(M)) + i] = -constant_coefficient(liftedPolynomials[i])
+        b[nrows(linearIdealMatrix) + i] = -constant_coefficient(liftedPolynomials[i])
     end
 
     try
         @debug "Solving system of equations with number of variables $(ncols(equationsMatrix)) and number of equations $(nrows(equationsMatrix))"
         w = Oscar.solve(equationsMatrix, b, side = :right)
+        @debug "Found solution $(w)"
         return ν.(w)
     catch
         return nothing

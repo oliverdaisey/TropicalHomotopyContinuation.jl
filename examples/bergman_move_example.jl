@@ -1,3 +1,5 @@
+using TropicalHomotopies
+
 p1 = point(0,0,0,1)
 p2 = point(0,0,0,0)
 

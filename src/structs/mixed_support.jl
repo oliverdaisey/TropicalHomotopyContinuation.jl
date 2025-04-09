@@ -1,5 +1,5 @@
 using Oscar
-export MixedSupport, vector_of_points, cayley_embedding, mixed_subdivision, supports
+export MixedSupport, mixed_support, vector_of_points, cayley_embedding, mixed_subdivision, supports
 
 @doc raw"""
     struct MixedSupport
@@ -80,6 +80,7 @@ function is_subset(S::MixedSupport, T::MixedSupport)
 
     for (s, t) in zip(supports(S), supports(T))
         if !is_subset(s, t)
+            @debug "Support $(s) is not a subset of $(t)"
             return false
         end
     end

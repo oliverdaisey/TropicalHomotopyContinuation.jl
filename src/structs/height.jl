@@ -1,5 +1,3 @@
-using Oscar
-
 export Height
 
 @doc raw"""

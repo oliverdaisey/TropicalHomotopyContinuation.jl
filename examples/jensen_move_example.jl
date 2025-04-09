@@ -1,3 +1,5 @@
+using TropicalHomotopies
+
 p1 = point(0, 0)
 p2 = point(1, 0)
 p3 = point(0, 1)
@@ -18,13 +20,17 @@ targetSupport = mixed_support((support([p1, p2, p3, p4], [0, 0, 0, 0]), support(
 
 M = matroid(Oscar.matrix(QQ, [1 0; 0 1]))
 
-chainOfFlats = chain_of_flats(M, [[1]])
+#chainOfFlats = chain_of_flats(M, Vector{Int}[])
 
-σ = mixed_cell(candidate, chainOfFlats)
+# σ = mixed_cell(candidate, chainOfFlats)
 
-T = tracker(mixedSupport, [σ], [targetSupport])
+Δ, σ = starting_data(targetSupport, M)
 
-pt, drift = tropical_intersection_point_and_drift(T, σ)
+display(chain_of_flats(σ))
 
-println("intersection point = ", pt)
-println("tropical drift = ", drift)
+T = tracker(Δ, targetSupport, [σ])
+# display(stable_intersection(T))
+# pt, drift = tropical_intersection_point_and_drift(T, σ)
+
+# println("intersection point = ", pt)
+# println("tropical drift = ", drift)

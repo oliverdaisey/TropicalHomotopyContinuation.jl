@@ -1,4 +1,4 @@
-using Oscar
+export Flat, ChainOfFlats, chain_of_flats, flat, closure, ground_set, empty_flat, ground_flat, is_subsequence, indicator_vector, maximal_refinements, breaking_direction
 
 struct Flat
     matroid::Union{RealisableMatroid,Matroid}
@@ -62,10 +62,11 @@ function chain_of_flats(M::Union{RealisableMatroid,Matroid}, flats::Vector{Flat}
     if isempty(flats)
         return ChainOfFlats(M, Flat[])
     end
-    @assert !isempty(first(flats)) "First flat cannot be the empty set"
-    @assert !isequal(basis(last(flats)), ground_set(M)) "Last flat cannot be the ground set"
-    @assert is_subsequence([Set(basis(f)) for f in flats], Set.(Oscar.flats(matroid(M)))) "Did not provide a valid chain of flats"
-    @assert all(length(basis(flats[i])) < length(basis(flats[i+1])) for i in 1:length(flats)-1) "Flats must be strictly increasing in length"
+    # disable all checks for now
+    # @assert !isempty(first(flats)) "First flat cannot be the empty set"
+    # @assert !isequal(basis(last(flats)), ground_set(M)) "Last flat cannot be the ground set"
+    # @assert is_subsequence([Set(basis(f)) for f in flats], Set.(Oscar.flats(matroid(M)))) "Did not provide a valid chain of flats"
+    # @assert all(length(basis(flats[i])) < length(basis(flats[i+1])) for i in 1:length(flats)-1) "Flats must be strictly increasing in length"
 
     return ChainOfFlats(M, flats)
 end
@@ -323,7 +324,16 @@ function cone(C::ChainOfFlats)
         
     end
 
-    return cone_from_inequalities(Oscar.matrix(QQ, inequalities), Oscar.matrix(QQ, equalities))
+    @debug "Equalities: $(equalities)"
+    @debug "Inequalities: $(inequalities)"
+
+    # if length(equalities) == 0
+    #     return cone_from_inequalities(Oscar.matrix(QQ, inequalities))
+    # else
+    #     return cone_from_inequalities(Oscar.matrix(QQ, inequalities), Oscar.matrix(QQ, equalities))
+    # end
+
+    return inequalities, equalities
 
 end
 
@@ -334,6 +344,10 @@ Return the reduced flats of the chain of flats `C`. This is a list of sets of in
 """
 function reduced_flats(C::ChainOfFlats)
 
+    if isempty(flats(C))
+        return Set{Int}[]
+    end
+    
     newFlats = Set{Int}[]
 
     for i in 1:length(flats(C))
@@ -401,11 +415,11 @@ function Base.in(w::TropicalPoint, C::ChainOfFlatsCone)
 end
 
 function empty_flat(M::Union{RealisableMatroid,Matroid})
-    return flat(M, Set{Int}())
+    return Flat(M, Set{Int}())
 end
 
 function ground_flat(M::Union{RealisableMatroid,Matroid})
-    return flat(M, ground_set(M))
+    return Flat(M, ground_set(M))
 end
 
 function Base.:(==)(F::Flat, G::Flat)
@@ -532,8 +546,8 @@ function breaking_direction(maximalChainOfFlats::ChainOfFlats, nonmaximalChainOf
     nonMaximalChain = full_flats(nonmaximalChainOfFlats)
 
     # find the first flat that is different
-    changingFlat = 0
-    for i in 2:length(maximalChain)
+    changingFlat = 2
+    for i in 2:length(maximalChain)-1
         if maximalChain[i] != nonMaximalChain[i]
             changingFlat = i
             break

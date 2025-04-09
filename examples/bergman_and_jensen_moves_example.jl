@@ -1,3 +1,5 @@
+using TropicalHomotopies
+import Oscar.uniform_matroid # do not import all of Oscar to avoid name clashes
 
 M = uniform_matroid(2,4)
 
@@ -38,51 +40,53 @@ candidateTwo = mixed_cell(mixed_support((f1, f2Active)), chainOfFlats)
 # check that the intersection points are correct
 T = tracker(mixedSupport, [candidateOne, candidateTwo], [targetSupport])
 
-println("candidate one")
-w, u = tropical_intersection_point_and_drift(T, candidateOne)
+@time display(stable_intersection(T))
 
-println("candidate two")
-w, u = tropical_intersection_point_and_drift(T, candidateTwo)
+# println("candidate one")
+# w, u = tropical_intersection_point_and_drift(T, candidateOne)
 
-println("Printing mixed cells")
-for σ in mixed_cells(T)
-    println(σ)
-    println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
-    println(" ")
-end
+# println("candidate two")
+# w, u = tropical_intersection_point_and_drift(T, candidateTwo)
 
-move!(T)
+# println("Printing mixed cells")
+# for σ in mixed_cells(T)
+#     println(σ)
+#     println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
+#     println(" ")
+# end
 
-println("Printing new mixed cells after move 1")
-for σ in mixed_cells(T)
-    println(σ)
-    println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
-    println(" ")
-end
+# move!(T)
 
-move!(T)
+# println("Printing new mixed cells after move 1")
+# for σ in mixed_cells(T)
+#     println(σ)
+#     println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
+#     println(" ")
+# end
 
-println("Printing new mixed cells after move 2")
-for σ in mixed_cells(T)
-    println(σ)
-    println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
-    println(" ")
-end
+# move!(T)
 
-move!(T)
+# println("Printing new mixed cells after move 2")
+# for σ in mixed_cells(T)
+#     println(σ)
+#     println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
+#     println(" ")
+# end
 
-println("Printing new mixed cells after move 3")
-for σ in mixed_cells(T)
-    println(σ)
-    println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
-    println(" ")
-end
+# move!(T)
 
-move!(T)
+# println("Printing new mixed cells after move 3")
+# for σ in mixed_cells(T)
+#     println(σ)
+#     println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
+#     println(" ")
+# end
 
-println("Printing new mixed cells after move 4")
-for σ in mixed_cells(T)
-    println(σ)
-    println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
-    println(" ")
-end
+# move!(T)
+
+# println("Printing new mixed cells after move 4")
+# for σ in mixed_cells(T)
+#     println(σ)
+#     println("pt and drift = ", tropical_intersection_point_and_drift(T, σ))
+#     println(" ")
+# end

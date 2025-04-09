@@ -1,3 +1,5 @@
+export CayleyEmbedding, cayley_embedding, matrix, supports, points, dim
+
 struct CayleyEmbedding
 
     supports::MixedSupport

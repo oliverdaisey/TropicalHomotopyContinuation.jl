@@ -1,3 +1,5 @@
+export move!, tropical_homotopy_continuation, stable_intersection
+
 @doc raw"""
     move!(T::Tracker)
 
@@ -7,19 +9,32 @@ If we would reach the target before or at any flip time, do nothing.
 """
 function move!(T::Tracker)
     
+    update_number_of_moves!(T, 1)
+    
+    if isempty(mixed_cells(T))
+        @error "No mixed cells to move. Something went wrong."
+        return false
+    end
     @debug "Moving the tracker."
     # check if we have reached the target heights
     for p in points(ambient_support(T))
         if length(targets(T)) == 1 && all(ambient_support(T)[p] == first(targets(T))[p] for p in points(first(targets(T))))
             @debug "Reached the target heights. Tropical homotopy algorithm complete."
-            return
+            return false
         end
     end
 
     # work out which mixed cell(s) have minimal Bergman / Jensen time
     @debug "Computing next flip time."
-    smallestTBergman = minimum([bergman_time(T, σ) for σ in mixed_cells(T)])
-    smallestTJensen = minimum([jensen_time(T, σ) for σ in mixed_cells(T)])
+    # bergmanTimes and jensenTimes should be a dictionary mapping mixed cells to their times
+    bergmanTimes = Dict{MixedCell, Height}()
+    jensenTimes = Dict{MixedCell, Height}()
+    for σ in mixed_cells(T)
+        bergmanTimes[σ] = bergman_time(T, σ)
+        jensenTimes[σ] = jensen_time(T, σ)
+    end
+    smallestTBergman = minimum([value for (key, value) in bergmanTimes])
+    smallestTJensen = minimum([value for (key, value) in jensenTimes])
     smallestT = min(smallestTBergman, smallestTJensen) # the time at which we perform flips
     @debug "Next flip time is $smallestT."
 
@@ -33,9 +48,10 @@ function move!(T::Tracker)
 
     if smallestT >= tTarget
         @debug "Flips happen after a target, so we need to check if we reached endgame or if a rebase needs to happen."
-        if length(targets(T)) != 1
+        if isinf(tTarget)
             @debug "Rebase needs to happen as we are sending a height to infinity."
             # set the heights to the first target heights and remove it from the list
+            update_number_of_rebases!(T, 1)
             rebase!(T, first(targets(T)))
             @debug "Rebase complete."
             return true
@@ -53,11 +69,12 @@ function move!(T::Tracker)
         @debug "Jensen time is smaller than Bergman time."
     end
     if smallestTBergman == smallestTJensen && smallestTBergman == smallestT 
+        update_number_of_simultaneous_bergman_and_jensen_moves!(T, 1)
         @debug "Both Bergman and Jensen times are equal. Performing both moves."
     end
 
-    changingBergmanMixedCells = [σ for σ in mixed_cells(T) if bergman_time(T, σ) == smallestT]
-    changingJensenMixedCells = [σ for σ in mixed_cells(T) if jensen_time(T, σ) == smallestT]
+    changingBergmanMixedCells = [σ for σ in mixed_cells(T) if bergmanTimes[σ] == smallestT]
+    changingJensenMixedCells = [σ for σ in mixed_cells(T) if jensenTimes[σ] == smallestT]
 
     @debug "Mixed cells that are changing: Bergman cells: $(changingBergmanMixedCells) and Jensen cells: $(changingJensenMixedCells)."
 
@@ -66,21 +83,23 @@ function move!(T::Tracker)
 
     newMixedCells = MixedCell[]
 
-    if smallestTBergman <= smallestTJensen
-        @debug "Performing Bergman moves."
+    if smallestTBergman == smallestT
+        @debug "Performing Bergman move."
+        update_number_of_bergman_moves!(T, 1)
         for σ in changingBergmanMixedCells
             @debug "Changing mixed cell: $σ."
-            push!(newMixedCells, bergman_flip(T, σ)...)
+            push!(newMixedCells, bergman_flip(T, σ, smallestTBergman)...)
             @debug "$(length(newMixedCells)) new mixed cells: $newMixedCells."
             remove_mixed_cell!(T, σ)
         end
     end
     l = length(newMixedCells)
-    if smallestTJensen <= smallestTBergman
-        @debug "Performing Jensen moves."
+    if smallestTJensen == smallestT
+        @debug "Performing Jensen move."
+        update_number_of_jensen_moves!(T, 1)
         for σ in changingJensenMixedCells
             @debug "Changing mixed cell: $σ."
-            push!(newMixedCells, jensen_flip(T, σ)...)
+            push!(newMixedCells, jensen_flip(T, σ, smallestTJensen)...)
             @debug "$(length(newMixedCells) - l) new mixed cells: $(newMixedCells[l+1:end])."
             remove_mixed_cell!(T, σ)
         end
@@ -99,6 +118,9 @@ function move!(T::Tracker)
     end
 
     @debug "Tracker move successfully."
+    @assert all([is_subset(active_support(σ), ambient_support(T)) for σ in mixed_cells(T)]) "The active support of the mixed cells are not a subset of the mixed support."
+
+    update_max_mixed_cells!(T, length(mixed_cells(T)))
 
     return true
 
@@ -109,6 +131,9 @@ function tropical_homotopy_continuation(T::Tracker)
 end
 
 function stable_intersection(T::Tracker)::Vector{TropicalPoint}
-    while move!(T) end
+    while move!(T) 
+    @info "$(T.logger)"
+    end
+    @info "$(T.logger)"
     return [first(tropical_intersection_point_and_drift(T, σ)) for σ in mixed_cells(T)]
 end

@@ -1,3 +1,5 @@
+export RealisableMatroid, matroid, matrix, ground_set, flats, rank, is_basis
+
 @doc raw"""
     RealisableMatroid
 
@@ -5,6 +7,7 @@ An interface to a realisable matroid that provides access to the realisation mat
 """
 struct RealisableMatroid
     realisationMatrix::MatElem{<:FieldElem}
+    groundSet::Set{Int}
 end
 
 @doc raw"""
@@ -35,7 +38,7 @@ end
 Construct a realisable matroid from the realisation matrix `A`.
 """
 function matroid(A::MatElem{<:FieldElem})
-    return RealisableMatroid(A)
+    return RealisableMatroid(A, Set(1:size(A, 2)))
 end
 
 function Base.convert(::Type{Matroid}, M::RealisableMatroid)
@@ -48,7 +51,7 @@ end
 Return the ground set of the realisable matroid `M`.
 """
 function ground_set(M::RealisableMatroid)
-    return ground_set(matroid(M))
+    return M.groundSet
 end
 
 @doc raw"""

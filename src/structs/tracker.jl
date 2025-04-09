@@ -1,3 +1,5 @@
+export Tracker, tracker, mixed_cells, ambient_support, targets, direction, tropical_intersection_point_and_drift, tropical_intersection_point
+
 @doc raw"""
     Tracker
 
@@ -8,6 +10,7 @@ mutable struct Tracker
     ambientSupport::MixedSupport
     mixedCells::Vector{MixedCell}
     targets::Vector{MixedSupport}
+    logger::Logger # logs data about the tracker
 
 end
 
@@ -17,7 +20,9 @@ end
 Construct a tracker for a mixed cell.
 """
 function tracker(ambientSupport::MixedSupport, mixedCells::Vector{MixedCell}, targets::Vector{MixedSupport})::Tracker
-    return Tracker(ambientSupport, mixedCells, targets)
+    T = Tracker(ambientSupport, mixedCells, targets, logger())
+    update_max_mixed_cells!(T, length(mixedCells))
+    return T
 end
 
 @doc raw"""
@@ -57,8 +62,6 @@ end
 Return the direction of the tracker `T`. This is the difference between the first target and ambient support.
 """
 function direction(T::Tracker)
-    # TODO: If points go to infinity, make sure the points that stay finite are the same in the target and ambient support
-    # TODO: In the infinity case, normalize direction to be a 0/1 vector
     dir = first(targets(T)) - ambient_support(T)
     if any(isinf.(heights(dir)))
         # every height should be either infinity or 0
@@ -84,7 +87,7 @@ end
 @doc raw"""
     tropical_intersection_point_and_drift(T::Tracker)::Union{Nothing, Tuple{Vector{QQFieldElem}, Vector{QQFieldElem}}}
 
-Compute the tropical intersection point and tropical drift of the mixed cell σ with tracker `T`. Returns `Nothing` if the intersection point is not well-defined.
+Compute the tropical intersection point and tropical drift of the mixed cell σ with tracker `T`.
 """
 function tropical_intersection_point_and_drift(T::Tracker, σ::MixedCell)::Union{Nothing,Tuple{Vector{QQFieldElem},Vector{QQFieldElem}}}
 
@@ -109,9 +112,17 @@ function tropical_intersection_point_and_drift(T::Tracker, σ::MixedCell)::Union
     end
 
     for S in supports(σ)
+        # get the first point in S that has nonzero height
         p1 = first(points(S))
         for p in points(S)
-            if !isequal(p1, p)
+            if !isinf(Δ[p])
+                p1 = p
+                break
+            end
+        end
+
+        for p in points(S)
+            if !isequal(p1, p) # && !isinf(Δ[p])
                 push!(rows, p1 - p)
                 push!(heights, Δ[p] - Δ[p1])
                 push!(dir, τ[p] - τ[p1])
@@ -120,10 +131,11 @@ function tropical_intersection_point_and_drift(T::Tracker, σ::MixedCell)::Union
     end
 
     flag, inverse = Oscar.is_invertible_with_inverse(Oscar.matrix(QQ, rows))
-
+    
     if !flag
-        return nothing
+        println(σ, " is not a valid mixed cell")
     end
+    @assert flag "Matrix not invertible"
 
     return inverse * heights, inverse * dir
 end
@@ -177,7 +189,7 @@ end
 Remove the mixed cell `σ` from the tracker `T`.
 """
 function remove_mixed_cell!(T::Tracker, σ::MixedCell)
-    deleteat!(T.mixedCells, findfirst(isequal(σ), mixed_cells(T)))
+    T.mixedCells = setdiff(T.mixedCells, [σ])
 end
 
 @doc raw"""
@@ -243,6 +255,7 @@ function rebase!(T::Tracker, Δ::MixedSupport)
 
             for σ in mixed_cells(T)
                 if p in points(σ)
+                    update_number_of_diverged_mixed_cells!(T, 1)
                     remove_mixed_cell!(T, σ)
                 end
             end
@@ -251,4 +264,38 @@ function rebase!(T::Tracker, Δ::MixedSupport)
 
     # remove the first target from the list of targets
     T.targets = T.targets[2:end]
+    println("Number of targets left: ", length(T.targets))
+
+    for σ in mixed_cells(T)
+        # check that the matrix coming from σ is invertible
+        @assert is_transverse(σ) "$(σ) is not transverse"
+        @assert are_support_heights_finite(T, σ) "$(σ) has invalid mixed height data"
+    end
+end
+
+function update_max_mixed_cells!(T::Tracker, n::Int)
+    T.logger.maxMixedCells = max(T.logger.maxMixedCells, n)
+end
+
+function update_number_of_jensen_moves!(T::Tracker, n::Int)
+    T.logger.numberOfJensenMoves += n
+end
+function update_number_of_bergman_moves!(T::Tracker, n::Int)
+    T.logger.numberOfBergmanMoves += n
+end
+
+function update_number_of_diverged_mixed_cells!(T::Tracker, n::Int)
+    T.logger.numberOfDivergedMixedCells += n
+end
+
+function update_number_of_moves!(T::Tracker, n::Int)
+    T.logger.numberOfMoves += n
+end
+
+function update_number_of_rebases!(T::Tracker, n::Int)
+    T.logger.numberOfRebases += n
+end
+
+function update_number_of_simultaneous_bergman_and_jensen_moves!(T::Tracker, n::Int)
+    T.logger.numberOfSimultaneousBergmanAndJensenMoves += n
 end

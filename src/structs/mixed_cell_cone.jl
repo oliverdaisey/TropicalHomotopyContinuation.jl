@@ -1,3 +1,5 @@
+export MixedCellConeFacet, MixedCellCone, mixed_cell_cone, mixed_cell_cone_facet, circuit, extra_point, facets
+
 using Oscar
 
 @doc raw"""
@@ -88,6 +90,7 @@ end
 function mixed_cell_cone(δ::MixedSupport, ambientSupport::MixedSupport)::MixedCellCone
 
     @assert length(δ) == length(ambientSupport) "Mixed cell candidate and ambient support must have the same number of supports."
+    @assert is_subset(δ, ambientSupport) "Mixed cell candidate must be a subset of the ambient support."
 
     cayleyEmbedding = cayley_embedding(ambientSupport)
 
