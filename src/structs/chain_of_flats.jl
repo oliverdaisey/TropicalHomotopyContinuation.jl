@@ -517,26 +517,21 @@ end
 
 Compute the closure of a set of elements in a realisable matroid.
 """
-function closure(M::RealisableMatroid, elements::Set{Int})
+function closure(M::RealisableMatroid, elems::Set{Int})
 
-    mat = matrix(M)
-
-    # check that including any other element keeps the rank the same
-    for i in 1:length(ground_set(M))
-        if !(i in elements)
-            if Oscar.rank(mat[:, [collect(elements); i]]) == Oscar.rank(mat[:, collect(elements)])
-                push!(elements, i)
-            end
+    # check if including any other element keeps the rank the same
+    for i in setdiff(ground_set(M), elems)
+        if rank(M, union(elems, Set{Int}([i]))) == rank(M, elems)
+            push!(elems, i)
         end
     end
 
-    return elements
+    return elems
 end
 
 function breaking_direction(maximalChainOfFlats::ChainOfFlats, nonmaximalChainOfFlats::ChainOfFlats)
 
-    M = matroid(maximalChainOfFlats)
-    @assert M == matroid(nonmaximalChainOfFlats) "The matroids of the chains of flats must be the same"
+    @assert matroid(maximalChainOfFlats) == matroid(nonmaximalChainOfFlats) "The matroids of the chains of flats must be the same"
 
     maximalChain = full_flats(maximalChainOfFlats)
     nonMaximalChain = full_flats(nonmaximalChainOfFlats)
