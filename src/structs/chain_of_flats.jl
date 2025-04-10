@@ -217,8 +217,6 @@ end
 Check if the chain of flats `C` is a proper subsequence of the chain of flats `D`.
 """
 function Base.:<(C::ChainOfFlats, D::ChainOfFlats)
-    if length(flats(C)) < length(flats(D))
-    end
     return (length(flats(C)) < length(flats(D))) && is_subsequence(flats(C), flats(D))
 end
 
