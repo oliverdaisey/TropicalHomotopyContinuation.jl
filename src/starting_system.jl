@@ -56,7 +56,7 @@ function starting_data(targetΔ::MixedSupport, M::RealisableMatroid)
                 monomial *= x[i]^exponentVector[i]
             end
             # make sure that the vertices of the simplex are lifted lower than everything inside targetΔ
-            f += TT(QQ(min([targetΔ[p] for p in points(targetΔ)]...)) - QQ(rand(UInt8)))*monomial
+            f += TT(QQ(min([targetΔ[p] for p in points(targetΔ)]...)) - QQ(rand(33:1000)))*monomial
         end
         @debug "Starting polynomial: $f"
         push!(startingPolynomials, f)
@@ -113,7 +113,6 @@ function starting_data(targetΔ::MixedSupport, M::RealisableMatroid)
     @debug "Finished computing starting data"
 
     @assert is_subset(active_support(σ), Δ) "The active support of the mixed cell is not a subset of the mixed support."
-
     @assert is_transverse(σ) "The mixed cell is not transverse."
     @assert are_support_heights_finite(Δ, σ) "$(σ) has invalid mixed height data"
     return Δ, σ

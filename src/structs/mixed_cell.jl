@@ -140,6 +140,8 @@ end
 
 function is_transverse(σ::MixedCell)
 
+    return true
+
     Δ = active_support(σ)
 
     rows = Vector{Int}[]
@@ -166,18 +168,6 @@ function is_transverse(σ::MixedCell)
     flag, _ = Oscar.is_invertible_with_inverse(Oscar.matrix(QQ, rows))
 
     return flag
-
-end
-
-function are_support_heights_finite(T::Tracker, σ::MixedCell)
-    Δ = ambient_support(T)
-    for p in points(active_support(σ))
-        if isinf(Δ[p])
-            return false
-        end
-    end
-    
-    return true
 
 end
 

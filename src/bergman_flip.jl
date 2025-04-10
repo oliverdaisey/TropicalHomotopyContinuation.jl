@@ -13,7 +13,8 @@ function bergman_time(T::Tracker, σ::MixedCell)
 
     # check that we are inside the cone
     if length(equalities) > 0
-        @assert all([sum(w .* v) <= 0 for v in inequalities]) && all([sum(w .* v) == 0 for v in equalities])  "The intersection point is not in the cone"
+        @assert all([sum(w .* v) == 0 for v in equalities]) "The intersection point is not in the cone (equality violated)"
+        @assert all([sum(w .* v) <= 0 for v in inequalities]) "The intersection point is not in the cone (inequality violated) intersection point: $(w) chain of flats: $(chainOfFlats)"
     else
         @assert all([sum(w .* v) <= 0 for v in inequalities]) "The intersection point is not in the cone"
     end
@@ -21,17 +22,27 @@ function bergman_time(T::Tracker, σ::MixedCell)
     # removing this assertion for efficiency reasons
     # @assert u in cone_from_equations(linear_equation_matrix(linear_span(C))) "The drift is not in the cone"
 
-    for equality in equalities
-        push!(inequalities, equality)
-        push!(inequalities, -equality)
-    end
-
     timesOfIntersection = [sum(v.*u) != 0 ? -sum(v.*w) / sum(v.*u) : Nemo.PosInf() for v in inequalities]
     # delete all times that are less than 0
     timesOfIntersection = [t for t in timesOfIntersection if t > 0]
     if timesOfIntersection == []
         return Nemo.PosInf()
     end
+
+    # check that we are still inside the cone
+    t = minimum(timesOfIntersection)
+    if !isinf(t)
+        if length(equalities) > 0
+            @assert all([sum((w + t*u) .* v) == 0 for v in equalities]) "The intersection point is not in the cone (equality violated)"
+        end
+        for v in inequalities
+            if sum((w + t*u) .* v) > 0
+                @assert false "Inequality $(v) is violated at $(w + t*u) corresponding to t = $(t). The time of intersection for this facet is equal to $(sum(v.*u) != 0 ? -sum(v.*w) / sum(v.*u) : Nemo.PosInf())"
+            end
+        end
+        @assert all([sum((w + t*u) .* v) <= 0 for v in inequalities]) "The intersection point is not in the cone (inequality violated) intersection point: $(w) chain of flats: $(chainOfFlats)"
+    end
+
     return minimum(timesOfIntersection)
 end
 
@@ -96,6 +107,7 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
         @assert are_support_heights_finite(T, σ) "$(σ) has invalid mixed height data"
     end
 
+    #TODO: before returning, check that the tropical drift of every new mixed cell points into the bergman cone
     return mixed_cell.(Ref(active_support(σ)), allowedChains)
 
 end

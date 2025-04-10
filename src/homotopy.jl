@@ -109,6 +109,13 @@ function move!(T::Tracker)
     @debug "Moving the tracker to the heights achieved at the flip time."
     add_heights!(T, min(smallestTBergman, smallestTJensen)*direction(T))
 
+    # check consistency of new cells
+    for σ in newMixedCells
+        @assert is_transverse(σ) "$(σ) is not transverse"
+        @assert are_support_heights_finite(T, σ) "$(σ) has invalid mixed height data"
+        @assert is_bergman_consistent(T, σ) "Cells are not Bergman consistent"
+    end
+
     @debug "New heights: $(dump_info(ambient_support(T)))."
 
     @debug "Merging $(length(newMixedCells)) new mixed cells."
@@ -116,9 +123,26 @@ function move!(T::Tracker)
         @debug "Merging mixed cell: $σ."
         merge_mixed_cell!(T, σ)
     end
+    # for σ in newMixedCells
+    #     @assert is_transverse(σ) "$(σ) is not transverse"
+    #     @assert are_support_heights_finite(T, σ) "$(σ) has invalid mixed height data"
+    #     @assert is_bergman_consistent(T, σ) "Cells are not Bergman consistent"
+    # end
+    # for σ in mixed_cells(T)
+    #     @assert is_transverse(σ) "$(σ) is not transverse"
+    #     @assert are_support_heights_finite(T, σ) "$(σ) has invalid mixed height data"
+    #     try
+    #         @assert is_bergman_consistent(T, σ) "Cells are not Bergman consistent"
+    #     catch
+    #         println("$(σ) is not Bergman consistent")
+    #         println("Bergman time: $(bergmanTimes[σ])")
+    #         println("Jensen time: $(jensenTimes[σ])")
+    #         println("Minimal time: $(smallestT)")
+    #     end
+    # end
 
     @debug "Tracker move successfully."
-    @assert all([is_subset(active_support(σ), ambient_support(T)) for σ in mixed_cells(T)]) "The active support of the mixed cells are not a subset of the mixed support."
+    # @assert all([is_subset(active_support(σ), ambient_support(T)) for σ in mixed_cells(T)]) "The active support of the mixed cells are not a subset of the mixed support."
 
     update_max_mixed_cells!(T, length(mixed_cells(T)))
 

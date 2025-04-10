@@ -175,7 +175,7 @@ function merge_mixed_cell!(T::Tracker, σ::MixedCell)
         # the active supports need to be the same
         if has_same_active_support(τ, σ)
             # the chains of flats need to be the same
-            if chain_of_flats(τ) == chain_of_flats(σ)
+            if isequal(chain_of_flats(τ), chain_of_flats(σ))
                 return
             end
         end
@@ -264,7 +264,7 @@ function rebase!(T::Tracker, Δ::MixedSupport)
 
     # remove the first target from the list of targets
     T.targets = T.targets[2:end]
-    println("Number of targets left: ", length(T.targets))
+    # println("Number of targets left: ", length(T.targets))
 
     for σ in mixed_cells(T)
         # check that the matrix coming from σ is invertible
@@ -298,4 +298,34 @@ end
 
 function update_number_of_simultaneous_bergman_and_jensen_moves!(T::Tracker, n::Int)
     T.logger.numberOfSimultaneousBergmanAndJensenMoves += n
+end
+
+function are_support_heights_finite(T::Tracker, σ::MixedCell)
+    Δ = ambient_support(T)
+    for p in points(active_support(σ))
+        if isinf(Δ[p])
+            return false
+        end
+    end
+    
+    return true
+
+end
+
+function is_bergman_consistent(T::Tracker, σ::MixedCell)
+    
+    chainOfFlats = chain_of_flats(σ)
+    w, _ = tropical_intersection_point_and_drift(T, σ)
+    inequalities, equalities = cone(chainOfFlats)
+
+    # check that we are inside the cone
+    if length(equalities) > 0
+        @assert all([sum(w .* v) == 0 for v in equalities]) "The intersection point is not in the cone (equality violated)"
+        @assert all([sum(w .* v) <= 0 for v in inequalities]) "The intersection point is not in the cone (inequality violated) intersection point: $(w) chain of flats: $(chainOfFlats)"
+    else
+        @assert all([sum(w .* v) <= 0 for v in inequalities]) "The intersection point is not in the cone"
+    end
+
+    return true
+
 end
