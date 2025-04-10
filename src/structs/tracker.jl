@@ -132,37 +132,11 @@ function tropical_intersection_point_and_drift(T::Tracker, σ::MixedCell)::Union
 
     flag, inverse = Oscar.is_invertible_with_inverse(Oscar.matrix(QQ, rows))
     
-    if !flag
-        println(σ, " is not a valid mixed cell")
-    end
-    @assert flag "Matrix not invertible"
+    @assert flag "Matrix not invertible, $(σ) positive-dimensional"
 
     return inverse * heights, inverse * dir
 end
 
-function tropical_intersection_point(Δ::MixedSupport)
-
-    rows = Vector{Int}[]
-    heights = QQFieldElem[]
-
-    for S in supports(Δ)
-        p1 = first(points(S))
-        for p in points(S)
-            if !isequal(p1, p)
-                push!(rows, p1 - p)
-                push!(heights, Δ[p] - Δ[p1])
-            end
-        end
-    end
-
-    flag, inverse = Oscar.is_invertible_with_inverse(Oscar.matrix(QQ, rows))
-
-    if !flag
-        return nothing
-    end
-
-    return inverse * heights
-end
 
 @doc raw"""
     merge_mixed_cell!(T::Tracker, σ::MixedCell)
