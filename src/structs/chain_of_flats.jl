@@ -2,7 +2,7 @@ export Flat, ChainOfFlats, chain_of_flats, flat, closure, ground_set, empty_flat
 
 struct Flat
     matroid::Union{RealisableMatroid,Matroid}
-    basis::Set{Int}
+    elements::Set{Int}
 end
 
 @doc raw"""
@@ -44,12 +44,12 @@ function matroid(F::Flat)
 end
 
 @doc raw"""
-    basis(F::Flat)
+    elements(F::Flat)
 
-Return the basis of a flat.
+Return the elements of a flat.
 """
-function basis(F::Flat)
-    return F.basis
+function elements(F::Flat)
+    return F.elements
 end
 
 @doc raw"""
@@ -64,9 +64,9 @@ function chain_of_flats(M::Union{RealisableMatroid,Matroid}, flats::Vector{Flat}
     end
     # disable all checks for now
     # @assert !isempty(first(flats)) "First flat cannot be the empty set"
-    # @assert !isequal(basis(last(flats)), ground_set(M)) "Last flat cannot be the ground set"
-    # @assert is_subsequence([Set(basis(f)) for f in flats], Set.(Oscar.flats(matroid(M)))) "Did not provide a valid chain of flats"
-    # @assert all(length(basis(flats[i])) < length(basis(flats[i+1])) for i in 1:length(flats)-1) "Flats must be strictly increasing in length"
+    # @assert !isequal(elements(last(flats)), ground_set(M)) "Last flat cannot be the ground set"
+    # @assert is_subsequence([Set(elements(f)) for f in flats], Set.(Oscar.flats(matroid(M)))) "Did not provide a valid chain of flats"
+    # @assert all(length(elements(flats[i])) < length(elements(flats[i+1])) for i in 1:length(flats)-1) "Flats must be strictly increasing in length"
 
     return ChainOfFlats(M, flats)
 end
@@ -76,38 +76,38 @@ function chain_of_flats(M::Union{RealisableMatroid,Matroid}, flats::Vector{Vecto
 end
 
 @doc raw"""
-    flat(M::Union{RealisableMatroid, Matroid}, basis::Union{Set{Int}, Set{}})
+    flat(M::Union{RealisableMatroid, Matroid}, elements::Union{Set{Int}, Set{}})
 
-Construct a flat from a matroid and a basis. Raises an error if the basis is not a valid flat.
+Construct a flat from a matroid and a set of elements. Raises an error if the elements do not define a valid flat.
 """
-function flat(M::Matroid, basis::Set{Int})
-    # check that the elements of basis actually index a basis in M
-    @assert basis in Set.(Oscar.flats(M)) "Did not provide a valid basis for a flat"
-    # @assert !isequal(basis, ground_set(M)) "Basis cannot be the ground set"
-    return Flat(M, basis)
+function flat(M::Matroid, elements::Set{Int})
+    # check that the elements actually index a flat in M
+    @assert elements in Set.(Oscar.flats(M)) "Did not provide valid elements for a flat"
+    # @assert !isequal(elements, ground_set(M)) "Cannot be the ground set"
+    return Flat(M, elements)
 end
 
 @doc raw"""
-    flat(M::Union{RealisableMatroid, Matroid}, basis::Union{Set{Int}, Set{}})
+    flat(M::Union{RealisableMatroid, Matroid}, elements::Union{Set{Int}, Set{}})
 
-Construct a flat from a matroid and a basis. Raises an error if the basis is not a valid flat.
+Construct a flat from a matroid and elements. Raises an error if the elements do not index a valid flat.
 """
-function flat(M::RealisableMatroid, basis::Set{Int})
-    @assert closure(M, basis) == basis "The basis is not a valid flat"
-    return flat(matroid(M), basis)
+function flat(M::RealisableMatroid, elements::Set{Int})
+    @assert closure(M, elements) == elements "The elements $(elements) do not index a valid flat"
+    return flat(matroid(M), elements)
 end
 
 @doc raw"""
-    flat(M::Union{RealisableMatroid, Matroid}, basis::Union{Vector{Int}, Vector{}})
+    flat(M::Union{RealisableMatroid, Matroid}, elements::Union{Vector{Int}, Vector{}})
 
-Construct a flat from a matroid and a basis. Raises an error if the basis is not a valid flat.
+Construct a flat from a matroid and a set of elements. Raises an error if the elements do not index a valid flat.
 """
-function flat(M::Union{RealisableMatroid,Matroid}, basis::Vector{Int})
-    return flat(M, Set(basis))
+function flat(M::Union{RealisableMatroid,Matroid}, elements::Vector{Int})
+    return flat(M, Set(elements))
 end
 
 function Base.show(io::IO, F::Flat)
-    print(io, "Flat with basis $(basis(F))")
+    print(io, "Flat indexed by $(elements(F))")
 end
 
 function Base.show(io::IO, C::ChainOfFlats)
@@ -115,8 +115,8 @@ function Base.show(io::IO, C::ChainOfFlats)
         print(io, "∅ ⊊ {" * join(sort(collect(ground_set(matroid(C)))), ", ") * "}")
         return
     end
-    # Convert each basis to a set and join with ⊊
-    flat_strings = ["{" * join(sort(collect(basis(f))), ", ") * "}" for f in flats(C)]
+    # Convert each flat to a set and join with ⊊
+    flat_strings = ["{" * join(sort(collect(elements(f))), ", ") * "}" for f in flats(C)]
     print(io, "∅ ⊊ " * join(flat_strings, " ⊊ ") * " ⊊ {" * join(sort(collect(ground_set(matroid(C)))), ", ") * "}")
 end
 
@@ -177,11 +177,11 @@ function is_maximal(C::ChainOfFlats)
 end
 
 function Base.convert(::Set{Int}, F::Flat)
-    return basis(F)
+    return elements(F)
 end
 
 function Base.isempty(F::Flat)
-    return isempty(basis(F))
+    return isempty(elements(F))
 end
 
 function Base.isempty(C::ChainOfFlats)
@@ -189,7 +189,7 @@ function Base.isempty(C::ChainOfFlats)
 end
 
 function Base.isequal(F::Flat, G::Flat)
-    return basis(F) == basis(G) && matroid(F) == matroid(G)
+    return elements(F) == elements(G) && matroid(F) == matroid(G)
 end
 
 function Base.isequal(C::ChainOfFlats, D::ChainOfFlats)
@@ -201,11 +201,11 @@ end
 
 Return the indicator vector of a flat.
 
-This is a vector of length equal to the cardinality of the ground set of the underlying matroid of `flat`, with 1s at the indices in the basis of the flat, and 0s otherwise.
+This is a vector of length equal to the cardinality of the ground set of the underlying matroid of `flat`, with 1s at the indices in the elements of the flat, and 0s otherwise.
 """
 function indicator_vector(flat::Flat)
     v = zeros(Int, length(ground_set(matroid(flat))))
-    for i in basis(flat)
+    for i in elements(flat)
         v[i] = 1
     end
     return v
@@ -350,13 +350,13 @@ function reduced_flats(C::ChainOfFlats)
 
     for i in 1:length(flats(C))
         if i == 1
-            push!(newFlats, basis(flats(C)[i]))
+            push!(newFlats, elements(flats(C)[i]))
         else
-            push!(newFlats, setdiff(basis(flats(C)[i]), basis(flats(C)[i-1])))
+            push!(newFlats, setdiff(elements(flats(C)[i]), elements(flats(C)[i-1])))
         end
     end
 
-    push!(newFlats, setdiff(ground_set(matroid(C)), basis(flats(C)[end])))
+    push!(newFlats, setdiff(ground_set(matroid(C)), elements(flats(C)[end])))
 
     return newFlats
 end
@@ -421,7 +421,7 @@ function ground_flat(M::Union{RealisableMatroid,Matroid})
 end
 
 function Base.:(==)(F::Flat, G::Flat)
-    return basis(F) == basis(G) && matroid(F) == matroid(G)
+    return elements(F) == elements(G) && matroid(F) == matroid(G)
 end
 
 function Base.:(==)(C::ChainOfFlats, D::ChainOfFlats)
@@ -442,19 +442,17 @@ function maximal_refinements(C::ChainOfFlats)::Vector{ChainOfFlats}
     mat = matroid(C)
 
     # Augment the chain with the empty set and the ground set.
-    # (Assuming you have functions `empty_flat(mat)` and `ground_flat(mat)`.)
     full_chain = [empty_flat(mat); flats(C); ground_flat(mat)]
 
     # Helper function: given two flats F and G (with F ⊂ G), return all flats F' with F ⊂ F' ⊂ G.
     function intermediate_flats(mat, F::Flat, G::Flat)::Vector{Flat}
         candidates = Set{Set{Int}}()
-        # Consider each element in G.basis that is not already in F.basis.
-        for e in setdiff(basis(G), basis(F))
+        for e in setdiff(elements(G), elements(F))
             # Compute the closure of F augmented by e.
-            candidate = closure(mat, union(basis(F), [e]))
+            candidate = closure(mat, union(elements(F), [e]))
             # We want candidates strictly between F and G, and the candidate must be a flat.
             # (Since candidate = closure(candidate) by construction, it is a flat.)
-            if basis(F) ⊊ candidate && candidate ⊊ basis(G)
+            if elements(F) ⊊ candidate && candidate ⊊ elements(G)
                 push!(candidates, Set(candidate))
             end
         end
