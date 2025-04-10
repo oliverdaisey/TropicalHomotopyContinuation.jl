@@ -26,7 +26,5 @@ T = tracker(Δ, targetSupport, [σ])
 
 # compute the stable intersection
 # 30x faster than Oscar stable intersection
-try
-    @profview display(stable_intersection(T))
 
-catch end
+@time display(stable_intersection(T))

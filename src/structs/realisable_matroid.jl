@@ -7,7 +7,7 @@ An interface to a realisable matroid that provides access to the realisation mat
 """
 struct RealisableMatroid
     realisationMatrix::MatElem{<:FieldElem}
-    groundSet::Set{Int}
+    ranks::Dict{Set{Int}, Int} # maps sets of elements to their rank
 end
 
 @doc raw"""
@@ -29,7 +29,7 @@ function matroid(M::RealisableMatroid)
 end
 
 function Base.show(io::IO, M::RealisableMatroid)
-    print(io, "Realisable ", matroid(M))
+    print(io, "Realisable matroid of rank ", rank(M), " with ground set ", ground_set(M))
 end
 
 @doc raw"""
@@ -38,7 +38,7 @@ end
 Construct a realisable matroid from the realisation matrix `A`.
 """
 function matroid(A::MatElem{<:FieldElem})
-    return RealisableMatroid(A, Set(1:size(A, 2)))
+    return RealisableMatroid(A, Dict{Set{Int}, Int}())
 end
 
 function Base.convert(::Type{Matroid}, M::RealisableMatroid)
@@ -51,7 +51,7 @@ end
 Return the ground set of the realisable matroid `M`.
 """
 function ground_set(M::RealisableMatroid)
-    return M.groundSet
+    return Set{Int}(1:ncols(matrix(M)))
 end
 
 @doc raw"""
@@ -69,7 +69,13 @@ end
 Return the rank of the realisable matroid `M`.
 """
 function rank(M::RealisableMatroid)
-    return Oscar.rank(matroid(M))
+
+    if haskey(M.ranks, ground_set(M))
+        return M.ranks[ground_set(M)]
+    end
+
+    M.ranks[ground_set(M)] = Oscar.rank(matrix(M)) # cache the rank
+    return M.ranks[ground_set(M)]
 end
 
 @doc raw"""
@@ -96,7 +102,14 @@ end
 Return `true` if `b` is a basis of the realisable matroid `M`.
 """
 function is_basis(M::RealisableMatroid, b::Set{Int})
-    return isequal(Oscar.rank(matrix(M)[:, collect(b)]), Oscar.rank(matrix(M)))
+    # check if we have already cached the answer
+    if haskey(M.ranks, b)
+        return M.ranks[b] == rank(M)
+    end
+
+    M.ranks[b] = Oscar.rank(matrix(M)[:, collect(b)]) # cache the rank
+
+    return M.ranks[b] == rank(M)
 end
 
 @doc raw"""
