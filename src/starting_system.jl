@@ -165,23 +165,15 @@ function find_tropical_point(polynomials::Vector{TropicalPolynomial}, M::Realisa
 
 end
 
-function random_lift(nu::TropicalSemiringMap, a::Union{TropicalSemiringElem, Nothing}=nothing)
-    functionField = Oscar.valued_field(nu)
-    coefficientField = base_ring(functionField)
+function random_lift(nu::TropicalSemiringMap, a::TropicalSemiringElem=tropical_semiring(nu)(rand(Int8)))
 
-    if isnothing(a)
-        a = ZZ(rand(Int8))
-    else
-        a = ZZ(a; preserve_ordering=true)
+    aInt = ZZ(a; preserve_ordering=true)
+    randomLift = rand(-999:999)*Oscar.uniformizer_field(nu)^aInt
+    while iszero(randomLift)
+        randomLift = rand(-999:999)*functionField(uniformizer(nu))^a
     end
-    randomLift = functionField(uniformizer(nu))^a
+    return randomLift
 
-
-    if coefficientField==QQ
-        return rand(-999:999)*randomLift
-    else
-        return rand(K)*randomLift
-    end
 end
 
 @doc raw"""
