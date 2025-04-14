@@ -496,23 +496,6 @@ function maximal_refinements(C::ChainOfFlats)::Vector{ChainOfFlats}
 end
 
 @doc raw"""
-    closure(M::Union{RealisableMatroid, Matroid}, elements::Set{Int})
-
-Compute the closure of a set of elements in a matroid.
-"""
-function closure(M::Matroid, elements::Set{Int})
-    # Fallback implementation using flats
-    # Find the smallest flat containing elements
-    for f in Oscar.flats(M)
-        if all(e in f for e in elements)
-            return f
-        end
-    end
-    return ground_set(M)  # Default if no flat is found
-    
-end
-
-@doc raw"""
     closure(M::RealisableMatroid, elements::Set{Int})
 
 Compute the closure of a set of elements in a realisable matroid.
