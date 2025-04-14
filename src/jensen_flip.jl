@@ -1,11 +1,11 @@
 export jensen_time
 
 @doc raw"""
-    jensen_time(T::Tracker, σ::MixedCell)
+    compute_jensen_time(T::Tracker, σ::MixedCell)
 
 Return the time at which the mixed cell candidate `σ` breaches its mixed cell cone.
 """
-function jensen_time(T::Tracker, σ::MixedCell)::Union{QQFieldElem,PosInf}
+function compute_jensen_time(T::Tracker, σ::MixedCell)::Union{QQFieldElem,PosInf}
     
     hypersurfaceDuals = transform_linear_support(chain_of_flats(σ))
 
@@ -26,7 +26,12 @@ function jensen_time(T::Tracker, σ::MixedCell)::Union{QQFieldElem,PosInf}
         return Nemo.PosInf()
     end
 
-    return minimum(timesOfIntersection)
+    jensenTime = minimum(timesOfIntersection)
+
+    # cache the answer
+    update_jensen_time!(T, σ, jensenTime)
+
+    return jensenTime 
     
 end
 

@@ -1,11 +1,13 @@
 export bergman_time
 
 @doc raw"""
-    bergman_time(T::Tracker)
+    compute_bergman_time(T::Tracker)
 
 Compute the Bergman time of the mixed cell `σ` with tracker `T`. This is the smallest time t at which `w + t * u` induces a coarser chain of flats than the current chain of flats, where `w` and `u` are the tropical intersection point and tropical drift of `T` respectively.
+
+Caches the answer inside `T`.
 """
-function bergman_time(T::Tracker, σ::MixedCell)
+function compute_bergman_time(T::Tracker, σ::MixedCell)
 
     chainOfFlats = chain_of_flats(σ)
     w, u = tropical_intersection_point_and_drift(T, σ)
@@ -43,7 +45,12 @@ function bergman_time(T::Tracker, σ::MixedCell)
         @assert all([sum((w + t*u) .* v) <= 0 for v in inequalities]) "The intersection point is not in the cone (inequality violated) intersection point: $(w) chain of flats: $(chainOfFlats)"
     end
 
-    return minimum(timesOfIntersection)
+    bergmanTime = minimum(timesOfIntersection)
+
+    # cache the answer
+    update_bergman_time!(T, σ, bergmanTime)
+
+    return bergmanTime 
 end
 
 @doc raw"""

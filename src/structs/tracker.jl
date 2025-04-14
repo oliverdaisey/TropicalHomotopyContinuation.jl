@@ -9,6 +9,8 @@ mutable struct Tracker
 
     ambientSupport::MixedSupport
     mixedCells::Vector{MixedCell}
+    bergmanTimes::Dict{MixedCell, Height}
+    jensenTimes::Dict{MixedCell, Height}
     targets::Vector{MixedSupport}
     logger::Logger # logs data about the tracker
 
@@ -20,7 +22,7 @@ end
 Construct a tracker for a mixed cell.
 """
 function tracker(ambientSupport::MixedSupport, mixedCells::Vector{MixedCell}, targets::Vector{MixedSupport})::Tracker
-    T = Tracker(ambientSupport, mixedCells, targets, logger())
+    T = Tracker(ambientSupport, mixedCells, Dict{MixedCell, Height}(), Dict{MixedCell, Height}(), targets, logger())
     update_max_mixed_cells!(T, length(mixedCells))
     return T
 end
@@ -164,6 +166,9 @@ Remove the mixed cell `σ` from the tracker `T`.
 """
 function remove_mixed_cell!(T::Tracker, σ::MixedCell)
     T.mixedCells = setdiff(T.mixedCells, [σ])
+    # remove the mixed cell from the bergman and jensen times
+    delete!(T.bergmanTimes, σ)
+    delete!(T.jensenTimes, σ)
 end
 
 @doc raw"""
@@ -236,6 +241,12 @@ function rebase!(T::Tracker, Δ::MixedSupport)
         end
     end
 
+    # invalidate the cached times
+    for σ in mixed_cells(T)
+        delete!(T.bergmanTimes, σ)
+        delete!(T.jensenTimes, σ)
+    end
+
     # remove the first target from the list of targets
     T.targets = T.targets[2:end]
     # println("Number of targets left: ", length(T.targets))
@@ -302,4 +313,64 @@ function is_bergman_consistent(T::Tracker, σ::MixedCell)
 
     return true
 
+end
+
+function update_bergman_time!(T::Tracker, σ::MixedCell, bergmanTime::Height)
+    T.bergmanTimes[σ] = bergmanTime
+end
+
+function update_jensen_time!(T::Tracker, σ::MixedCell, jensenTime::Height)
+    T.jensenTimes[σ] = jensenTime
+end
+
+function bergman_time(T::Tracker, σ::MixedCell)::Height
+    if haskey(T.bergmanTimes, σ)
+        return T.bergmanTimes[σ]
+    else
+        return compute_bergman_time(T, σ)
+    end
+end
+
+function jensen_time(T::Tracker, σ::MixedCell)::Height
+    if haskey(T.jensenTimes, σ)
+        return T.jensenTimes[σ]
+    else
+        return compute_jensen_time(T, σ)
+    end
+end
+
+@doc raw"""
+    update_cached_times!(T::Tracker, newMixedCells::Vector{MixedCell}, smallestT::Height)
+
+Update the cached jensen and bergman times for the mixed cells that didn't change.
+"""
+function update_cached_times!(T::Tracker, newMixedCells::Vector{MixedCell}, smallestT::Height)
+    # update the cached jensen and bergman times for the mixed cells that didn't change
+    jensenTimes = T.jensenTimes
+    bergmanTimes = T.bergmanTimes
+
+    for σ in mixed_cells(T)
+        if σ in newMixedCells
+            continue
+        end
+        # if we get to this point, then σ is not in newMixedCells
+        # if we already cached a time then update it
+        if length(targets(T)) == 1
+            # in this case times are defined as the fraction of the distance between the current heights and target heights
+            # so updating the cache should be done multiplicatively and not additively
+            if haskey(jensenTimes, σ) && !isinf(jensenTimes[σ])
+                update_jensen_time!(T, σ, (jensenTimes[σ] - smallestT) / (1 - smallestT))
+            end
+            if haskey(bergmanTimes, σ) && !isinf(bergmanTimes[σ])
+                update_bergman_time!(T, σ, (bergmanTimes[σ] - smallestT) / (1 - smallestT))
+            end
+            continue
+        end
+        if haskey(jensenTimes, σ) && !isinf(jensenTimes[σ])
+            update_jensen_time!(T, σ, jensenTimes[σ] - smallestT)
+        end
+        if haskey(bergmanTimes, σ) && !isinf(bergmanTimes[σ])
+            update_bergman_time!(T, σ, bergmanTimes[σ] - smallestT)
+        end
+    end
 end
