@@ -133,7 +133,7 @@ function tropical_intersection_point_and_drift(T::Tracker, σ::MixedCell)::Union
     end
 
     flag, inverse = Oscar.is_invertible_with_inverse(Oscar.matrix(QQ, rows))
-    
+
     @assert flag "Matrix not invertible, $(σ) positive-dimensional"
 
     return inverse * heights, inverse * dir
@@ -191,13 +191,27 @@ Construct a tracker for a list of mixed cells. Tracks heights that need to go to
 
 The starting support needs to be a superset of the target support.
 """
-function tracker(startingSupport::MixedSupport, targetSupport::MixedSupport, mixedCells::Vector{MixedCell})::Tracker
+function tracker(startingSupport::MixedSupport, targetSupport::MixedSupport, mixedCells::Vector{MixedCell}; path::Symbol=:coefficient_wise)::Tracker
 
     @assert is_subset(targetSupport, startingSupport) "The target support needs to be a subset of the starting support."
 
+    if path == :coefficient_wise
+        targets = coefficientwise_homotopy(startingSupport, targetSupport)
+    elseif path == :straight_line
+        targets = straight_line_homotopy(startingSupport, targetSupport)
+    else
+        error("invalid path strategy")
+    end
+
+    return tracker(startingSupport, mixedCells, targets)
+
+end
+
+function coefficientwise_homotopy(startingSupport::MixedSupport, targetSupport::MixedSupport)::Vector{MixedSupport}
     targets = Vector{MixedSupport}()
+
+    # temporarily add the starting support to work out which heights need to go to infinity
     push!(targets, startingSupport)
-    # Work out which heights need to go to infinity
     for p in points(startingSupport)
         if isinf(targetSupport[p])
             # take the latest support in `targets` and set the height of `p` to infinity
@@ -208,14 +222,29 @@ function tracker(startingSupport::MixedSupport, targetSupport::MixedSupport, mix
     end
 
     # at this point no more heights need to be set to infinity, so go to the target heights all at once
+    # TODO: this should probably also be coefficientwise
     push!(targets, targetSupport)
 
-    # the first support in the list is the starting support, remove it
-    targets = targets[2:end]
+    # do not return the first support in the list, it is the starting support
+    return targets[2:end]
+end
 
-    return tracker(startingSupport, mixedCells, targets)
+function straight_line_homotopy(startingSupport::MixedSupport, targetSupport::MixedSupport)::Vector{MixedSupport}
+    targets = Vector{MixedSupport}()
 
-    
+    # stage 1: send heights of points in startingSupport but not in targetSupport to infinity
+    targetMidway = copy(startingSupport)
+    for p in points(startingSupport)
+        if isinf(targetSupport[p])
+            update_height!(targetMidway, p, Nemo.PosInf())
+        end
+    end
+    push!(targets, targetMidway)
+
+    # stage 2: send heights of points in startingSupport and targetSupport to the correct value
+    push!(targets, targetSupport)
+
+    return targets
 end
 
 function rebase!(T::Tracker, Δ::MixedSupport)
@@ -292,13 +321,13 @@ function are_support_heights_finite(T::Tracker, σ::MixedCell)
             return false
         end
     end
-    
+
     return true
 
 end
 
 function is_bergman_consistent(T::Tracker, σ::MixedCell)
-    
+
     chainOfFlats = chain_of_flats(σ)
     w, _ = tropical_intersection_point_and_drift(T, σ)
     inequalities, equalities = cone(chainOfFlats)
