@@ -22,7 +22,7 @@ end
 Construct a tracker for a mixed cell.
 """
 function tracker(ambientSupport::MixedSupport, mixedCells::Vector{MixedCell}, targets::Vector{MixedSupport})::Tracker
-    T = Tracker(ambientSupport, mixedCells, Dict{MixedCell, Height}(), Dict{MixedCell, Height}(), targets, logger())
+    T = Tracker(copy(ambientSupport), copy(mixedCells), Dict{MixedCell, Height}(), Dict{MixedCell, Height}(), copy(targets), logger())
     update_max_mixed_cells!(T, length(mixedCells))
     return T
 end
@@ -133,7 +133,7 @@ function tropical_intersection_point_and_drift(T::Tracker, σ::MixedCell)::Union
     end
 
     flag, inverse = Oscar.is_invertible_with_inverse(Oscar.matrix(QQ, rows))
-    
+
     @assert flag "Matrix not invertible, $(σ) positive-dimensional"
 
     return inverse * heights, inverse * dir
@@ -215,7 +215,7 @@ function tracker(startingSupport::MixedSupport, targetSupport::MixedSupport, mix
 
     return tracker(startingSupport, mixedCells, targets)
 
-    
+
 end
 
 function rebase!(T::Tracker, Δ::MixedSupport)
@@ -292,13 +292,13 @@ function are_support_heights_finite(T::Tracker, σ::MixedCell)
             return false
         end
     end
-    
+
     return true
 
 end
 
 function is_bergman_consistent(T::Tracker, σ::MixedCell)
-    
+
     chainOfFlats = chain_of_flats(σ)
     w, _ = tropical_intersection_point_and_drift(T, σ)
     inequalities, equalities = cone(chainOfFlats)
