@@ -22,7 +22,7 @@ end
 Construct a tracker for a mixed cell.
 """
 function tracker(ambientSupport::MixedSupport, mixedCells::Vector{MixedCell}, targets::Vector{MixedSupport})::Tracker
-    T = Tracker(ambientSupport, mixedCells, Dict{MixedCell, Height}(), Dict{MixedCell, Height}(), targets, logger())
+    T = Tracker(copy(ambientSupport), copy(mixedCells), Dict{MixedCell, Height}(), Dict{MixedCell, Height}(), copy(targets), logger())
     update_max_mixed_cells!(T, length(mixedCells))
     return T
 end
@@ -245,6 +245,7 @@ function straight_line_homotopy(startingSupport::MixedSupport, targetSupport::Mi
     push!(targets, targetSupport)
 
     return targets
+
 end
 
 function rebase!(T::Tracker, Δ::MixedSupport)
