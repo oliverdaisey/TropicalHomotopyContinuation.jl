@@ -1,7 +1,3 @@
-export MixedCellConeFacet, MixedCellCone, mixed_cell_cone, mixed_cell_cone_facet, circuit, extra_point, facets
-
-using Oscar
-
 @doc raw"""
     struct MixedCellConeFacet
 
@@ -95,7 +91,7 @@ function mixed_cell_cone(δ::MixedSupport, ambientSupport::MixedSupport)::MixedC
     cayleyEmbedding = cayley_embedding(ambientSupport)
 
     facets = MixedCellConeFacet[]
-    
+
     for p in points(ambientSupport)
         if p in points(δ)
             continue
@@ -115,7 +111,7 @@ function mixed_cell_cone(δ::MixedSupport, ambientSupport::MixedSupport)::MixedC
         if nontrivialEntries[findfirst(x -> x == p, pts)] > 0
             nontrivialEntries = -nontrivialEntries
         end
-        
+
         # circuit has enties all zero except for nontrivialEntries
         circuit = Dict{Point, Height}()
         for point in points(δ)
@@ -165,7 +161,7 @@ function Base.in(Δ::MixedSupport, C::MixedCellCone)
     for κ in facets(C)
         push!(dotProducts, sum([QQ(circuit(κ)[p]) * QQ(Δ[p]) for p in pts if p in keys(circuit(κ))]))
     end
-    
+
     if all(dotProducts .<= 0)
         return true
     else
@@ -205,7 +201,7 @@ function Base.convert(::Type{Polyhedron}, C::MixedCellCone)
         push!(b, 0)
     end
 
-    # convert A to polymake compatible format 
+    # convert A to polymake compatible format
 
     A = Oscar.matrix(QQ, A)
 

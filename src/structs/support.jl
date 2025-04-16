@@ -1,5 +1,3 @@
-export Support, entries, heights, support, is_subset, vector_of_points, points
-
 @doc raw"""
     Support
 
@@ -50,13 +48,13 @@ function Base.:-(s::Support, t::Support)::Support
     new_entries = Dict{Point, Height}()
 
     # for each point in the union, subtract the heights
-    
+
     for p in points(t)
         new_entries[p] = get(entries(s), p, Nemo.PosInf()) - get(entries(t), p, Nemo.PosInf())
     end
 
     return Support(new_entries)
-    
+
 end
 
 @doc raw"""
@@ -121,12 +119,12 @@ This requires comparing the points by their entries.
 function merge(S::Support, T::Support)
     # Create a new dictionary to store the merged entries
     merged_entries = Dict{Point, Height}()
-    
+
     # Copy all entries from S
     for (point, height) in S.entries
         merged_entries[point] = height
     end
-    
+
     # Add entries from T, but only for points that don't exist in S
     for (pt, ht) in T.entries
         # does there exist a key with the same entries as point?
@@ -145,7 +143,7 @@ function merge(S::Support, T::Support)
             end
         end
     end
-    
+
     # Return a new Support with the merged entries
     return Support(merged_entries)
 end

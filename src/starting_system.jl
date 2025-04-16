@@ -1,5 +1,3 @@
-export starting_data
-
 @doc raw"""
     starting_data(targetΔ::MixedSupport, M::RealisableMatroid)
 
@@ -19,7 +17,7 @@ function starting_data(targetΔ::MixedSupport, M::RealisableMatroid)
     R, x = polynomial_ring(TT, ["x$i" for i in 1:n])
     degrees = []
     for S in supports(targetΔ)
-        
+
         @debug "Computing starting polynomial for point support $(S)"
         pts = points(S)
         ambientDim = length(first(pts))
@@ -133,7 +131,7 @@ function find_tropical_point(polynomials::Vector{TropicalPolynomial}, M::Realisa
     ν = tropical_semiring_map(R, t)
 
     liftedPolynomials = random_lift.(Ref(ν), polynomials, Ref(S))
-    
+
     rows = Vector{Oscar.elem_type(R)}[]
     for f in liftedPolynomials
         push!(rows, coeff.(Ref(f), gens(S)))

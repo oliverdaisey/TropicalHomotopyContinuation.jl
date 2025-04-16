@@ -1,5 +1,3 @@
-export RealisableMatroid, matroid, matrix, ground_set, flats, rank, is_basis
-
 @doc raw"""
     RealisableMatroid
 
@@ -111,6 +109,14 @@ function is_basis(M::RealisableMatroid, b::Set{Int})
     return length(b) == rank(M)
 end
 
+
+
+###############################################################################
+#
+#  Analogues for Oscar matroids
+#
+###############################################################################
+
 @doc raw"""
     is_basis(M::Matroid, b::Set{Int})
 
@@ -118,4 +124,14 @@ Return `true` if `b` is a basis of the matroid `M`.
 """
 function is_basis(M::Matroid, b::Set{Int})
     return b in Set.(bases(M))
+end
+
+
+@doc raw"""
+    ground_set(M::Union{RealisableMatroid, Matroid})
+
+Return the ground set of a matroid as a set.
+"""
+function ground_set(M::Matroid)
+    return Set(M.groundset)
 end
