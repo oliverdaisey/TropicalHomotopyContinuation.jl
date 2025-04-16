@@ -22,7 +22,7 @@ import Oscar.flats
 Return the vector of non trivial flats in `C`.
 """
 function flats(C::ChainOfFlats)
-    return C.flats
+    return copy(C.flats)
 end
 
 @doc raw"""
@@ -309,7 +309,7 @@ function cone(C::ChainOfFlats)
             equality[Fj] = -1
             push!(equalities, equality)
         end
-        
+
         for j in 1:(i-1)
             G = reducedFlats[j]
             for g in G
@@ -319,7 +319,7 @@ function cone(C::ChainOfFlats)
                 push!(inequalities, inequality)
             end
         end
-        
+
     end
 
     @debug "Equalities: $(equalities)"
@@ -345,7 +345,7 @@ function reduced_flats(C::ChainOfFlats)
     if isempty(flats(C))
         return Set{Int}[]
     end
-    
+
     newFlats = Set{Int}[]
 
     for i in 1:length(flats(C))
@@ -492,8 +492,54 @@ function maximal_refinements(C::ChainOfFlats)::Vector{ChainOfFlats}
     all_full_chains = refine_chain(full_chain, 1)
     # Remove the initial empty and ground flats before returning.
     result = [chain_of_flats(mat, ch[2:end-1]) for ch in all_full_chains]
+
+    if !issetequal(result, maximal_refinements_new(C))
+        println("The maximal refinements do not match the new implementation")
+        println("C: ", C)
+        println("result: ", result)
+        println("maximal_refinements_new(C): ", maximal_refinements_new(C))
+        @assert false
+    end
     return result
 end
+
+function maximal_refinements_new(C::ChainOfFlats)::Vector{ChainOfFlats}
+
+    @assert rank(matroid(C))==length(C)+2 "Chain of flats must have colength 1, but chain has length $(length(C)) and matroid has rank $(rank(matroid(C)))"
+
+    # Augment the chain with the empty set and the ground set.
+    fullChain = [empty_flat(matroid(C)); flats(C); ground_flat(matroid(C))]
+
+    # Compute all ranks and find the position i and unique pair (F,G) of consecutive flats where rank(F)+2==rank(G)
+    # this can be optimised by either only compute the ranks we need or computing all ranks at once
+    fullChainRanks = [ rank(matroid(C),elements(F)) for F in fullChain]
+    i = findfirst(i -> fullChainRanks[i]==fullChainRanks[i-1]+2, 2:length(fullChain))
+    i += 1 # adding 1 as findfirst returns index of first hit in 2:length()
+    F = fullChain[i-1]
+    G = fullChain[i]
+
+    # Construct all intermediate flats
+    intermediateFlats = Set{Flat}()
+    for e in setdiff(elements(G), elements(F))
+        # Compute the closure of F + e and check for strict inclusions
+        candidate = closure(matroid(C), union(elements(F), [e]))
+        if elements(F) ⊊ candidate && candidate ⊊ elements(G)
+            push!(intermediateFlats, Flat(matroid(C),candidate))
+        end
+    end
+
+    # Construct all maximal refinements of C
+    refinedChains = ChainOfFlats[]
+    for intermediateFlat in intermediateFlats
+        # Create a new chain by inserting the intermediate flat at position i+1
+        newChain = flats(C)
+        insert!(newChain, i-1, intermediateFlat) # decrement i to account for missing empty flat in C
+        push!(refinedChains, chain_of_flats(matroid(C), newChain))
+    end
+    return refinedChains
+
+end
+
 
 @doc raw"""
     closure(M::RealisableMatroid, elements::Set{Int})
