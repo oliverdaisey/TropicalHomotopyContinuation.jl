@@ -1,9 +1,8 @@
-export Flat, ChainOfFlats, chain_of_flats, flat, closure, ground_set, empty_flat, ground_flat, is_subsequence, indicator_vector, maximal_refinements, breaking_direction
-
-struct Flat
-    matroid::Union{RealisableMatroid,Matroid}
-    elements::Set{Int}
-end
+###############################################################################
+#
+#  Chains of flats
+#
+###############################################################################
 
 @doc raw"""
     ChainOfFlats
@@ -13,6 +12,23 @@ A chain of flats is an ascending sequence of flats of a matroid, starting from t
 struct ChainOfFlats
     matroid::Union{RealisableMatroid,Matroid}
     flats::Vector{Flat}
+end
+
+
+
+###############################################################################
+#
+#  Accessors
+#
+###############################################################################
+
+@doc raw"""
+    matroid(C::ChainOfFlats)
+
+Return the matroid that `C` is a chain of flats of.
+"""
+function matroid(C::ChainOfFlats)
+    return C.matroid
 end
 
 import Oscar.flats
@@ -25,32 +41,15 @@ function flats(C::ChainOfFlats)
     return C.flats
 end
 
-@doc raw"""
-    matroid(C::ChainOfFlats)
+Base.getindex(C::ChainOfFlats, i::Int) = flats(C)[i]
 
-Return the matroid that `C` is a chain of flats of.
-"""
-function matroid(C::ChainOfFlats)
-    return C.matroid
-end
 
-@doc raw"""
-    matroid(F::Flat)
 
-Return the matroid that `F` is a flat of.
-"""
-function matroid(F::Flat)
-    return F.matroid
-end
-
-@doc raw"""
-    elements(F::Flat)
-
-Return the elements of a flat.
-"""
-function elements(F::Flat)
-    return F.elements
-end
+###############################################################################
+#
+#  Constructors
+#
+###############################################################################
 
 @doc raw"""
     chain_of_flats(M::Union{RealisableMatroid, Matroid}, flats::Vector{Flat})
@@ -59,165 +58,15 @@ Construct a chain of flats from a matroid and a vector of flats.
 """
 function chain_of_flats(M::Union{RealisableMatroid,Matroid}, flats::Vector{Flat})
     # check that we have a valid chain of flats
-    if isempty(flats)
-        return ChainOfFlats(M, Flat[])
-    end
-    # disable all checks for now
     # @assert !isempty(first(flats)) "First flat cannot be the empty set"
     # @assert !isequal(elements(last(flats)), ground_set(M)) "Last flat cannot be the ground set"
     # @assert is_subsequence([Set(elements(f)) for f in flats], Set.(Oscar.flats(matroid(M)))) "Did not provide a valid chain of flats"
     # @assert all(length(elements(flats[i])) < length(elements(flats[i+1])) for i in 1:length(flats)-1) "Flats must be strictly increasing in length"
-
     return ChainOfFlats(M, flats)
 end
 
 function chain_of_flats(M::Union{RealisableMatroid,Matroid}, flats::Vector{Vector{Int}})
     return chain_of_flats(M, [Flat(M, Set(f)) for f in flats])
-end
-
-@doc raw"""
-    flat(M::Union{RealisableMatroid, Matroid}, elements::Union{Set{Int}, Set{}})
-
-Construct a flat from a matroid and a set of elements. Raises an error if the elements do not define a valid flat.
-"""
-function flat(M::Matroid, elements::Set{Int})
-    # check that the elements actually index a flat in M
-    @assert elements in Set.(Oscar.flats(M)) "Did not provide valid elements for a flat"
-    # @assert !isequal(elements, ground_set(M)) "Cannot be the ground set"
-    return Flat(M, elements)
-end
-
-@doc raw"""
-    flat(M::Union{RealisableMatroid, Matroid}, elements::Union{Set{Int}, Set{}})
-
-Construct a flat from a matroid and elements. Raises an error if the elements do not index a valid flat.
-"""
-function flat(M::RealisableMatroid, elements::Set{Int})
-    @assert closure(M, elements) == elements "The elements $(elements) do not index a valid flat"
-    return flat(matroid(M), elements)
-end
-
-@doc raw"""
-    flat(M::Union{RealisableMatroid, Matroid}, elements::Union{Vector{Int}, Vector{}})
-
-Construct a flat from a matroid and a set of elements. Raises an error if the elements do not index a valid flat.
-"""
-function flat(M::Union{RealisableMatroid,Matroid}, elements::Vector{Int})
-    return flat(M, Set(elements))
-end
-
-function Base.show(io::IO, F::Flat)
-    print(io, "Flat indexed by $(elements(F))")
-end
-
-function Base.show(io::IO, C::ChainOfFlats)
-    if isempty(flats(C))
-        print(io, "∅ ⊊ {" * join(sort(collect(ground_set(matroid(C)))), ", ") * "}")
-        return
-    end
-    # Convert each flat to a set and join with ⊊
-    flat_strings = ["{" * join(sort(collect(elements(f))), ", ") * "}" for f in flats(C)]
-    print(io, "∅ ⊊ " * join(flat_strings, " ⊊ ") * " ⊊ {" * join(sort(collect(ground_set(matroid(C)))), ", ") * "}")
-end
-
-@doc raw"""
-    is_subsequence(sub::Vector{T}, vec::Vector{T})::Bool where T
-
-Check if `sub` is a subsequence of `vec`.
-"""
-function is_subsequence(sub::Vector{T}, vec::Vector{T})::Bool where T
-    # If sub is empty, it's technically a subsequence
-    isempty(sub) && return true
-
-    # Keep track of the last matched index in vec
-    last_matched_index = 0
-
-    # Iterate through each element in sub
-    for s in sub
-        # Find the index of s in vec, starting after the last matched index
-        found_index = findnext(x -> isequal(x, s), vec, last_matched_index + 1)
-
-        # If not found, or found at an earlier index, return false
-        if isnothing(found_index)
-            return false
-        end
-
-        # Update the last matched index
-        last_matched_index = found_index
-    end
-
-    return true
-end
-
-@doc raw"""
-    ground_set(M::Union{RealisableMatroid, Matroid})
-
-Return the ground set of a matroid as a set.
-"""
-function ground_set(M::Matroid)
-    return Set(M.groundset)
-end
-
-@doc raw"""
-    Base.length(C::ChainOfFlats)
-
-Return the length of the chain of flats `C`.
-"""
-function Base.length(C::ChainOfFlats)
-    return length(flats(C))
-end
-
-@doc raw"""
-    is_maximal(C::ChainOfFlats)
-
-Check if the chain of flats `C` is maximal.
-"""
-function is_maximal(C::ChainOfFlats)
-    return length(C) == rank(matroid(C)) - 1
-end
-
-function Base.convert(::Set{Int}, F::Flat)
-    return elements(F)
-end
-
-function Base.isempty(F::Flat)
-    return isempty(elements(F))
-end
-
-function Base.isempty(C::ChainOfFlats)
-    return isempty(flats(C))
-end
-
-function Base.isequal(F::Flat, G::Flat)
-    return elements(F) == elements(G) && matroid(F) == matroid(G)
-end
-
-function Base.isequal(C::ChainOfFlats, D::ChainOfFlats)
-    return flats(C) == flats(D) && matroid(C) == matroid(D)
-end
-
-@doc raw"""
-    indicator_vector(flat::Flat)
-
-Return the indicator vector of a flat.
-
-This is a vector of length equal to the cardinality of the ground set of the underlying matroid of `flat`, with 1s at the indices in the elements of the flat, and 0s otherwise.
-"""
-function indicator_vector(flat::Flat)
-    v = zeros(Int, length(ground_set(matroid(flat))))
-    for i in elements(flat)
-        v[i] = 1
-    end
-    return v
-end
-
-@doc raw"""
-    Base.:(<)(C::ChainOfFlats, D::ChainOfFlats)
-
-Check if the chain of flats `C` is a proper subsequence of the chain of flats `D`.
-"""
-function Base.:<(C::ChainOfFlats, D::ChainOfFlats)
-    return (length(flats(C)) < length(flats(D))) && is_subsequence(flats(C), flats(D))
 end
 
 @doc raw"""
@@ -260,6 +109,116 @@ end
 
 function full_flats(C::ChainOfFlats)
     return [empty_flat(matroid(C)); flats(C); ground_flat(matroid(C))]
+end
+
+
+
+###############################################################################
+#
+#  Conversions
+#
+###############################################################################
+
+function Base.convert(::Set{Int}, F::Flat)
+    return elements(F)
+end
+
+
+
+###############################################################################
+#
+#  Printing
+#
+###############################################################################
+
+function Base.show(io::IO, C::ChainOfFlats)
+    if isempty(flats(C))
+        print(io, "∅ ⊊ {" * join(sort(collect(ground_set(matroid(C)))), ", ") * "}")
+        return
+    end
+    # Convert each flat to a set and join with ⊊
+    flat_strings = ["{" * join(sort(collect(elements(f))), ", ") * "}" for f in flats(C)]
+    print(io, "∅ ⊊ " * join(flat_strings, " ⊊ ") * " ⊊ {" * join(sort(collect(ground_set(matroid(C)))), ", ") * "}")
+end
+
+
+
+###############################################################################
+#
+#  Properties
+#
+###############################################################################
+
+@doc raw"""
+    colength(C::ChainOfFlats)
+
+Return the colength of the chain of flats `C`, i.e., the rank of its matroid minus its length.
+"""
+function colength(C::ChainOfFlats)
+    return length(C) - rank(matroid(C)) + 1
+end
+
+@doc raw"""
+    length(C::ChainOfFlats)
+
+Return the length of the chain of flats `C`.
+"""
+function Base.length(C::ChainOfFlats)
+    return length(flats(C))
+end
+
+@doc raw"""
+    is_maximal(C::ChainOfFlats)
+
+Return `true` if the chain of flats `C` is maximal and `false` otherwise.
+"""
+function is_maximal(C::ChainOfFlats)
+    return iszero(colength(C))
+end
+
+function Base.isempty(C::ChainOfFlats)
+    return isempty(flats(C))
+end
+
+function Base.isequal(C::ChainOfFlats, D::ChainOfFlats)
+    return flats(C) == flats(D) && matroid(C) == matroid(D)
+end
+
+function Base.:(==)(C::ChainOfFlats, D::ChainOfFlats)
+    return flats(C) == flats(D) && matroid(C) == matroid(D)
+end
+
+@doc raw"""
+    Base.:(<)(C::ChainOfFlats, D::ChainOfFlats)
+
+Check if the chain of flats `C` is a proper subsequence of the chain of flats `D`.
+"""
+function Base.:<(C::ChainOfFlats, D::ChainOfFlats)
+    return (length(flats(C)) < length(flats(D))) && is_subsequence(flats(C), flats(D))
+end
+
+function is_subsequence(sub::Vector{T}, vec::Vector{T})::Bool where T
+    # If sub is empty, it's technically a subsequence
+    isempty(sub) && return true
+
+    # Keep track of the last matched index in vec
+    last_matched_index = 0
+
+    # Iterate through each element in sub
+    for s in sub
+        # Find the index of s in vec, starting after the last matched index
+        found_index = findnext(x -> isequal(x, s), vec, last_matched_index + 1)
+
+        # If not found, or found at an earlier index, return false
+        if isnothing(found_index)
+            return false
+        end
+
+        # Update the last matched index
+        last_matched_index = found_index
+    end
+
+    return true
 end
 
 @doc raw"""
@@ -309,7 +268,7 @@ function cone(C::ChainOfFlats)
             equality[Fj] = -1
             push!(equalities, equality)
         end
-        
+
         for j in 1:(i-1)
             G = reducedFlats[j]
             for g in G
@@ -319,7 +278,7 @@ function cone(C::ChainOfFlats)
                 push!(inequalities, inequality)
             end
         end
-        
+
     end
 
     @debug "Equalities: $(equalities)"
@@ -345,7 +304,7 @@ function reduced_flats(C::ChainOfFlats)
     if isempty(flats(C))
         return Set{Int}[]
     end
-    
+
     newFlats = Set{Int}[]
 
     for i in 1:length(flats(C))
@@ -361,76 +320,8 @@ function reduced_flats(C::ChainOfFlats)
     return newFlats
 end
 
+
 @doc raw"""
-    ChainOfFlatsCone
-
-A chain of flats cone is a cone defined by a chain of flats, along with a set of equations and inequalities that define the fine structure cone.
-"""
-struct ChainOfFlatsCone
-
-    chainOfFlats::ChainOfFlats
-    equations::Vector{Vector{QQFieldElem}}
-    inequalities::Vector{Vector{QQFieldElem}}
-
-end
-
-function chain_of_flats_cone(chainOfFlats::ChainOfFlats, equations::Vector{Vector{QQFieldElem}}, inequalities::Vector{Vector{QQFieldElem}})
-
-    # Check that the equations and inequalities are of the same length as the ground set of the matroid
-    @assert all(length(equations[i]) == length(ground_set(matroid(chainOfFlats))) for i in 1:length(equations)) "The equations and inequalities must be of the same length as the ground set of the matroid"
-
-    return ChainOfFlatsCone(chainOfFlats, equations, inequalities)
-
-end
-
-function polymake_cone(C::ChainOfFlatsCone)::Cone
-
-    A = Oscar.matrix(QQ, C.inequalities)
-    b = Oscar.matrix(QQ, C.equations)
-
-    return cone_from_inequalities(A, b)
-
-end
-
-function chain_of_flats(C::ChainOfFlatsCone)
-    return C.chainOfFlats
-end
-
-function inequalities(C::ChainOfFlatsCone)
-    return C.inequalities
-end
-
-function Base.show(io::IO, C::ChainOfFlatsCone)
-
-    print(io, "Cone defined by the chain of flats $(chain_of_flats(C))")
-
-end
-
-function Base.in(w::TropicalPoint, C::ChainOfFlatsCone)
-
-    return all([dot(v, w) <= 0 for v in inequalities(C)]) && all([dot(v, w) == 0 for v in equations(C)])
-
-end
-
-function empty_flat(M::Union{RealisableMatroid,Matroid})
-    return Flat(M, Set{Int}())
-end
-
-function ground_flat(M::Union{RealisableMatroid,Matroid})
-    return Flat(M, ground_set(M))
-end
-
-function Base.:(==)(F::Flat, G::Flat)
-    return elements(F) == elements(G) && matroid(F) == matroid(G)
-end
-
-function Base.:(==)(C::ChainOfFlats, D::ChainOfFlats)
-    return flats(C) == flats(D) && matroid(C) == matroid(D)
-end
-
-Base.getindex(C::ChainOfFlats, i::Int) = flats(C)[i]
-
-"""
     maximal_refinements(C::ChainOfFlats)
 
 Returns all maximal chains of flats that are refinements of `C`.
@@ -493,23 +384,6 @@ function maximal_refinements(C::ChainOfFlats)::Vector{ChainOfFlats}
     # Remove the initial empty and ground flats before returning.
     result = [chain_of_flats(mat, ch[2:end-1]) for ch in all_full_chains]
     return result
-end
-
-@doc raw"""
-    closure(M::RealisableMatroid, elements::Set{Int})
-
-Compute the closure of a set of elements in a realisable matroid.
-"""
-function closure(M::RealisableMatroid, elems::Set{Int})
-
-    # check if including any other element keeps the rank the same
-    for i in setdiff(ground_set(M), elems)
-        if rank(M, union(elems, Set{Int}([i]))) == rank(M, elems)
-            push!(elems, i)
-        end
-    end
-
-    return elems
 end
 
 function breaking_direction(maximalChainOfFlats::ChainOfFlats, nonmaximalChainOfFlats::ChainOfFlats)

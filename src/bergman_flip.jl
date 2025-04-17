@@ -1,5 +1,3 @@
-export bergman_time
-
 @doc raw"""
     compute_bergman_time(T::Tracker)
 
@@ -50,7 +48,7 @@ function compute_bergman_time(T::Tracker, σ::MixedCell)
     # cache the answer
     update_bergman_time!(T, σ, bergmanTime)
 
-    return bergmanTime 
+    return bergmanTime
 end
 
 @doc raw"""
@@ -63,7 +61,7 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
     C = chain_of_flats(σ)
     Δ = ambient_support(T)
     w, u = tropical_intersection_point_and_drift(T, σ)
-    
+
     unrefinedChain = chain_of_flats(matroid(C), w + tBergman * u)
     @assert length(unrefinedChain) + 1 == length(C) "Perturbation required"
     refinedChains = maximal_refinements(unrefinedChain)
@@ -95,7 +93,7 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
         if Oscar.rank(A) != Oscar.rank(M*A)
             continue
         end
-        
+
         Π = oblique_projection_matrix(A, transpose(M))
 
         if sum((Π*u).*breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))) <= 0
@@ -127,7 +125,7 @@ Perform a Bergman move on the tracker `T`. This updates the mixed heights and th
 We can perform a Bergman move when `bergman_time(T)` is less than `jensen_time(T)`.
 """
 function bergman_move!(T::Tracker)
-    
+
     # work out which mixed cell(s) have minimal Bergman time
     smallestTBergman = minimum([bergman_time(T, σ) for σ in mixed_cells(T)])
     changingMixedCells = [σ for σ in mixed_cells(T) if bergman_time(T, σ) == smallestTBergman]

@@ -1,5 +1,3 @@
-export Height
-
 @doc raw"""
     Height
 
@@ -9,7 +7,7 @@ const Height = Union{QQFieldElem, PosInf}
 
 function Base.convert(::Type{Height}, w)::Height
     if isinf(w)
-        return w 
+        return w
     end
     return QQ(w)
 end

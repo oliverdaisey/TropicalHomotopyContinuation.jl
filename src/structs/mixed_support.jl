@@ -1,5 +1,4 @@
 using Oscar
-export MixedSupport, mixed_support, vector_of_points, cayley_embedding, mixed_subdivision, supports
 
 @doc raw"""
     struct MixedSupport

@@ -1,12 +1,10 @@
-export jensen_time
-
 @doc raw"""
     compute_jensen_time(T::Tracker, σ::MixedCell)
 
 Return the time at which the mixed cell candidate `σ` breaches its mixed cell cone.
 """
 function compute_jensen_time(T::Tracker, σ::MixedCell)::Union{QQFieldElem,PosInf}
-    
+
     hypersurfaceDuals = transform_linear_support(chain_of_flats(σ))
 
     @assert is_subset(active_support(σ), ambient_support(T)) "The active support of the mixed cell is not a subset of the ambient support."
@@ -31,8 +29,8 @@ function compute_jensen_time(T::Tracker, σ::MixedCell)::Union{QQFieldElem,PosIn
     # cache the answer
     update_jensen_time!(T, σ, jensenTime)
 
-    return jensenTime 
-    
+    return jensenTime
+
 end
 
 
@@ -83,7 +81,7 @@ end
 Perform a Jensen move on the tracker `T`.
 """
 function jensen_move!(T::Tracker)
-    
+
     # work out which mixed cell(s) have minimal Bergman time
     smallestTJensen = minimum([jensen_time(T, σ) for σ in mixed_cells(T)])
     changingMixedCells = [σ for σ in mixed_cells(T) if jensen_time(T, σ) == smallestTJensen]
