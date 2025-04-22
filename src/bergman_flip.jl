@@ -80,6 +80,8 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
     end
     M = Oscar.matrix(QQ, rows)
 
+    # jensenTrail = convex_hull([w + tBergman * u], [u], transpose(kernel(M, side=:right)))
+
     allowedChains = ChainOfFlats[]
     for chain in refinedChains
         # add columns for each indicator vector of chain
@@ -90,15 +92,41 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
         A = transpose(Oscar.matrix(QQ, cols))
 
         # create the matrix formed by the supports
-        if Oscar.rank(A) != Oscar.rank(M*A)
+        # if Oscar.rank(A) != Oscar.rank(M*A)
+        #     continue
+        # end
+
+        # Π = oblique_projection_matrix(A, transpose(M))
+
+        # if sum((Π*u).*breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))) <= 0
+        #     continue
+        # end
+        # if M*Π*u != M*u
+        #     continue
+        # end
+
+        # check full condition in the paper
+        v = breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))
+        # σ_3 = polyhedron((zero_matrix(QQ, 0,ncols(M)), QQFieldElem[]), (M, M*u))
+        # σ_2 = polyhedron([-v], [0])
+        coneEqualities = Oscar.matrix(QQ, cone(chain)[2])
+        # σ_1 = polyhedron((zero_matrix(QQ,0,ncols(coneEqualities)), QQFieldElem[]), (coneEqualities, zeros(QQ, nrows(coneEqualities))))
+
+        # σ_123 = intersect(σ_1, σ_2, σ_3)
+
+        σ_123 = polyhedron(([-v], [0]), (vcat(M, coneEqualities), vcat(M*u, zeros(QQ, nrows(coneEqualities)))))
+
+        if !is_feasible(σ_123)
             continue
         end
+    
 
-        Π = oblique_projection_matrix(A, transpose(M))
-
-        if sum((Π*u).*breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))) <= 0
-            continue
-        end
+        # sanity check
+        # chainOfFlatsCone = polyhedron(positive_hull(transpose(A), ones_matrix(QQ, 1,nrows(A))))
+        # if Oscar.dim(intersect(jensenTrail, chainOfFlatsCone)) != 1
+        #     @assert false "Something is terribly wrong. (dim of σ_123 = $(Oscar.dim(σ_123))) "
+        #     continue
+        # end
 
         push!(allowedChains, chain)
 
@@ -113,6 +141,20 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
     end
 
     #TODO: before returning, check that the tropical drift of every new mixed cell points into the bergman cone
+
+    # for σ in newMixedCells
+    #     # add columns for each indicator vector of chain
+    #     chain = chain_of_flats(σ)
+    #     cols = Vector{QQFieldElem}[]
+    #     push!(cols, indicator_vector.(full_flats(chain))...)
+    #     # remove all zero vector from cols
+    #     cols = [col for col in cols if col != zeros(QQ, length(col))]
+    #     A = Oscar.matrix(QQ, cols)
+    #     chainOfFlatsCone = polyhedron(positive_hull(A, ones_matrix(QQ, 1,ncols(A))))
+    #     @assert Oscar.dim(intersect(jensenTrail, chainOfFlatsCone)) == 1 "Bergman flip output sanity check failed"
+    # end
+
+
     return mixed_cell.(Ref(active_support(σ)), allowedChains)
 
 end
@@ -162,4 +204,10 @@ function oblique_projection_matrix(A, B)
     @assert Oscar.rank(A) == ncols(A) "Matrix A is not full rank"
     _, invKernelMatrix = Oscar.is_invertible_with_inverse(transpose(B) * A)
     return A*(invKernelMatrix)*transpose(B)
+end
+
+
+# sanity check function
+function check_bergman_flip_output(σ::MixedCell)
+
 end

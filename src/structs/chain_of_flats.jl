@@ -257,6 +257,7 @@ function cone(C::ChainOfFlats)
 
     reducedFlats = reduced_flats(C)
 
+
     equalities = Vector{QQFieldElem}[]
     inequalities = Vector{QQFieldElem}[]
 
@@ -281,6 +282,9 @@ function cone(C::ChainOfFlats)
 
     end
 
+    # add all ones vector
+
+
     @debug "Equalities: $(equalities)"
     @debug "Inequalities: $(inequalities)"
 
@@ -289,7 +293,6 @@ function cone(C::ChainOfFlats)
     # else
     #     return cone_from_inequalities(Oscar.matrix(QQ, inequalities), Oscar.matrix(QQ, equalities))
     # end
-
     return inequalities, equalities
 
 end
