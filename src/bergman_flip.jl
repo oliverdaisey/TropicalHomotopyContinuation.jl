@@ -80,7 +80,7 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
     end
     M = Oscar.matrix(QQ, rows)
 
-    # jensenTrail = convex_hull([w + tBergman * u], [u], transpose(kernel(M, side=:right)))
+    jensenTrail = convex_hull([w + tBergman * u], [u], transpose(kernel(M, side=:right)))
 
     allowedChains = ChainOfFlats[]
     for chain in refinedChains
@@ -92,41 +92,41 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
         A = transpose(Oscar.matrix(QQ, cols))
 
         # create the matrix formed by the supports
-        # if Oscar.rank(A) != Oscar.rank(M*A)
-        #     continue
-        # end
+        if Oscar.rank(A) != Oscar.rank(M*A)
+            continue
+        end
 
-        # Π = oblique_projection_matrix(A, transpose(M))
+        Π = oblique_projection_matrix(A, transpose(M))
 
-        # if sum((Π*u).*breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))) <= 0
-        #     continue
-        # end
-        # if M*Π*u != M*u
-        #     continue
-        # end
+        if sum((Π*u).*breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))) <= 0
+            continue
+        end
+        if M*Π*u != M*u
+            continue
+        end
 
         # check full condition in the paper
-        v = breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))
+        #  v = breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))
         # σ_3 = polyhedron((zero_matrix(QQ, 0,ncols(M)), QQFieldElem[]), (M, M*u))
         # σ_2 = polyhedron([-v], [0])
-        coneEqualities = Oscar.matrix(QQ, cone(chain)[2])
+        # coneEqualities = Oscar.matrix(QQ, cone(chain)[2])
         # σ_1 = polyhedron((zero_matrix(QQ,0,ncols(coneEqualities)), QQFieldElem[]), (coneEqualities, zeros(QQ, nrows(coneEqualities))))
 
         # σ_123 = intersect(σ_1, σ_2, σ_3)
 
-        σ_123 = polyhedron(([-v], [0]), (vcat(M, coneEqualities), vcat(M*u, zeros(QQ, nrows(coneEqualities)))))
+        # σ_123 = polyhedron(([-v], [0]), (vcat(M, coneEqualities), vcat(M*u, zeros(QQ, nrows(coneEqualities)))))
 
-        if !is_feasible(σ_123)
-            continue
-        end
+        # if !is_feasible(σ_123)
+        #     continue
+        # end
     
 
         # sanity check
-        # chainOfFlatsCone = polyhedron(positive_hull(transpose(A), ones_matrix(QQ, 1,nrows(A))))
-        # if Oscar.dim(intersect(jensenTrail, chainOfFlatsCone)) != 1
-        #     @assert false "Something is terribly wrong. (dim of σ_123 = $(Oscar.dim(σ_123))) "
-        #     continue
-        # end
+        chainOfFlatsCone = polyhedron(positive_hull(transpose(A), ones_matrix(QQ, 1,nrows(A))))
+        if Oscar.dim(intersect(jensenTrail, chainOfFlatsCone)) != 1
+            # @assert false "Something is terribly wrong. (dim of σ_123 = $(Oscar.dim(σ_123))) "
+            continue
+        end
 
         push!(allowedChains, chain)
 

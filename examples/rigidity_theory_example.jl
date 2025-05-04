@@ -23,7 +23,7 @@ push!(targetSupports, support([point([1,0,0,0,0,0,0,0,0,0]),point([0,0,0,0,0,0,0
 # define the target support
 targetSupport = mixed_support(targetSupports)
 Δ, σ = starting_data(targetSupport, M)
-T = tracker(Δ, targetSupport, [σ], path=:straight_line)
+T = tracker(Δ, targetSupport, [σ], path=:coefficient_wise)
 
 # compute the stable intersection
 # 30x faster than Oscar stable intersection
