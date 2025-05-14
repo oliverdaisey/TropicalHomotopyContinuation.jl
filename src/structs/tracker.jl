@@ -79,6 +79,7 @@ function perturb!(T::Tracker, timeOfFailure::Height)
 
     for σ in mixed_cells(newTracker)
         # compute_bergman_time(T, σ)
+        #TODO: uncommenting line 81 makes everything work, but then bergman flip afterwards asks for a perturbation. Keeping it commented out, either the computation of bergman time or jensen time will complain that the initial data is invalid.
         bergmanTimes[σ] = compute_bergman_time(newTracker, σ)
         jensenTimes[σ] = compute_jensen_time(newTracker, σ)
     end
