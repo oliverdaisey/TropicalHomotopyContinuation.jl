@@ -96,14 +96,14 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
             continue
         end
 
-        Π = oblique_projection_matrix(A, transpose(M))
+        # Π = oblique_projection_matrix(A, transpose(M))
 
-        if sum((Π*u).*breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))) <= 0
-            continue
-        end
-        if M*Π*u != M*u
-            continue
-        end
+        # if sum((Π*u).*breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))) <= 0
+        #     continue
+        # end
+        # if M*Π*u != M*u
+        #     continue
+        # end
 
         # check full condition in the paper
         #  v = breaking_direction(chain, chain_of_flats(matroid(C), w + tBergman * u))
@@ -154,7 +154,8 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
     #     @assert Oscar.dim(intersect(jensenTrail, chainOfFlatsCone)) == 1 "Bergman flip output sanity check failed"
     # end
 
-
+    @assert length(newMixedCells) > 0 "No new mixed cells during a Bergman flip"
+    
     return mixed_cell.(Ref(active_support(σ)), allowedChains)
 
 end

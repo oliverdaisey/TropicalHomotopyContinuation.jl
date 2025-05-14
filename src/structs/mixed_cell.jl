@@ -181,3 +181,59 @@ function are_support_heights_finite(Δ::MixedSupport, σ::MixedCell)
     return true
 
 end
+
+function tropical_polyhedra_spans_and_mults(σ::MixedCell)
+
+    polyhedra = []
+    mults = []
+    for S in supports(active_support(σ))
+
+        # compute multiplicity
+        push!(mults, length(lattice_points(convex_hull(entries.(points(S)))))-1)
+        
+
+        rows = Vector{QQFieldElem}[]
+        pts = points(S)
+        p1 = first(pts)
+        for p in pts
+            if !isequal(p1, p)
+                push!(rows, convert(Vector{QQFieldElem}, p1 - p))
+            end
+        end
+        M = Oscar.matrix(QQ, rows)
+        A = transpose(kernel(M, side=:right))
+        push!(polyhedra, convex_hull(zero_matrix(QQ, 1, ncols(A)), zero_matrix(QQ, 0, ncols(A)), A))
+
+    end
+    
+    d = max(ambient_dim.(polyhedra)...)
+
+    # add columns for each indicator vector of chain
+    cols = Vector{QQFieldElem}[]
+    push!(cols, indicator_vector.(full_flats(chain_of_flats(σ)))...)
+    # remove all zero vector from cols
+    cols = [col for col in cols if col != zeros(QQ, length(col))]
+    A = Oscar.matrix(QQ, cols)
+
+    
+    push!(polyhedra, convex_hull(zero_matrix(QQ, 1, ncols(A)), zero_matrix(QQ, 0, ncols(A)), A))
+    push!(mults, 1)
+
+    return polyhedra, mults
+
+end
+
+# slow
+function multiplicity(σ::MixedCell)
+    
+    polyhedra, mults = tropical_polyhedra_spans_and_mults(σ)
+
+    (C, m), rest = Iterators.peel(zip(polyhedra, mults))
+    for (D, n) in rest
+        m *= n*Oscar.tropical_intersection_multiplicity(C, D)
+        C = intersect(C, D)
+    end
+
+    return m
+
+end

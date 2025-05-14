@@ -52,8 +52,45 @@ function targets(T::Tracker)
     return T.targets
 end
 
-function perturb(T::Tracker)
-    # TODO: Write implementation
+function perturb!(T::Tracker, timeOfFailure::Height)
+
+    @assert !isinf(timeOfFailure) "Time of failure should be finite"
+
+    dir = direction(T)
+    add_heights!(T, (timeOfFailure / 2)*dir)
+    # choose a random point in height space
+    targetSupports = tuple(copy.(supports(ambient_support(T)))...)
+    # update all the heights to random values
+    for S in targetSupports
+        for p in points(S)
+            if !isinf(S[p])
+                newHeight = QQ(rand(Int16))
+                update_height!(S, p, newHeight)
+            end
+        end
+    end
+    targetMixedSupport = mixed_support(targetSupports)
+
+
+    newTracker = tracker(ambient_support(T), mixed_cells(T), [targetMixedSupport])
+
+    bergmanTimes = Dict{MixedCell, Height}()
+    jensenTimes = Dict{MixedCell, Height}()
+
+    for σ in mixed_cells(newTracker)
+        # compute_bergman_time(T, σ)
+        bergmanTimes[σ] = compute_bergman_time(newTracker, σ)
+        jensenTimes[σ] = compute_jensen_time(newTracker, σ)
+    end
+
+    smallestTBergman = minimum([value for (key, value) in bergmanTimes])
+    smallestTJensen = minimum([value for (key, value) in jensenTimes])
+    smallestT = min(smallestTBergman, smallestTJensen) # the time at which we perform flips
+    
+    dir = direction(newTracker)
+    add_heights!(T, (smallestT/2)*dir)
+    add_heights!(first(targets(T)), (smallestT/2)*dir)
+
 end
 
 @doc raw"""
@@ -142,19 +179,22 @@ end
     merge_mixed_cell!(T::Tracker, σ::MixedCell)
 
 Merge the mixed cell `σ` into the tracker `T`. If the mixed cell is already in the tracker, do nothing.
+
+Returns `true` if the mixed cell was added, `false` otherwise.
 """
-function merge_mixed_cell!(T::Tracker, σ::MixedCell)
+function merge_mixed_cell!(T::Tracker, σ::MixedCell)::Bool
     # check if σ is already in the tracker
     for τ in mixed_cells(T)
         # the active supports need to be the same
         if has_same_active_support(τ, σ)
             # the chains of flats need to be the same
             if isequal(chain_of_flats(τ), chain_of_flats(σ))
-                return
+                return false
             end
         end
     end
     push!(T.mixedCells, σ)
+    return true
 end
 
 @doc raw"""
@@ -178,6 +218,14 @@ function add_heights!(T::Tracker, Δ::MixedSupport)
     for S in supports(ambient_support(T))
         for p in points(S)
             update_height!(S, p, ambient_support(T)[p] + Δ[p])
+        end
+    end
+end
+
+function add_heights!(Δ1::MixedSupport, Δ2::MixedSupport)
+    for S in supports(Δ1)
+        for p in points(S)
+            update_height!(S, p, Δ1[p] + Δ2[p])
         end
     end
 end

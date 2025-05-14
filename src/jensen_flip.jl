@@ -69,7 +69,6 @@ function jensen_flip(T::Tracker, σ::MixedCell, tJensen::Height)
         # check that the matrix coming from σ is invertible
         @assert is_transverse(σ) "$(σ) is not transverse"
         @assert are_support_heights_finite(T, σ) "$(σ) has invalid mixed height data"
-
     end
 
     return newMixedCells

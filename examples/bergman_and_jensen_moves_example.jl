@@ -1,7 +1,7 @@
 using TropicalHomotopies
 import Oscar.uniform_matroid # do not import all of Oscar to avoid name clashes
 
-M = uniform_matroid(2,4)
+M = matroid(Oscar.matrix(QQ, [-1 -2 -3 -4; 11 13 15 19]))
 
 p1 = point(0,0,0,1)
 p2 = point(0,0,0,0)
@@ -38,7 +38,7 @@ chainOfFlats = chain_of_flats(M, [[2]])
 candidateTwo = mixed_cell(mixed_support((f1, f2Active)), chainOfFlats)
 
 # check that the intersection points are correct
-T = tracker(mixedSupport, [candidateOne, candidateTwo], [targetSupport])
+T = tracker(mixedSupport, targetSupport, [candidateOne, candidateTwo], path=:straight_line)
 
 @time display(stable_intersection(T))
 
