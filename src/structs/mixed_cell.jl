@@ -71,7 +71,7 @@ function Base.getindex(σ::MixedCell, p::Point)
 end
 
 function Base.show(io::IO, σ::MixedCell)
-    print(io, "Mixed cell with active points $(join(["$(p) ∈ S_$(findfirst(x -> p in x, supports(σ)))" for p in points(σ)], ", ")) and chain of flats $(chain_of_flats(σ))")
+    print(io, "Mixed cell with active points $(join(["$(p) ∈ S_$(findfirst(x -> p in x, supports(σ)))" for p in sort(points(σ))], ", ")) and chain of flats $(chain_of_flats(σ))")
 end
 
 @doc raw"""

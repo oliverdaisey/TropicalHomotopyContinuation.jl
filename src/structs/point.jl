@@ -76,6 +76,10 @@ function Base.convert(::Type{Point}, v::Vector{QQFieldElem})
     return point(convert(Vector{Int}, v))
 end
 
+function Base.isless(a::Point, b::Point)::Bool
+    return isless(a.entries, b.entries)
+end
+
 function entries(p::Point)
     return p.entries
 end

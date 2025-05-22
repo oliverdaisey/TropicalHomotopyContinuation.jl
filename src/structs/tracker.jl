@@ -55,14 +55,14 @@ end
 function perturb!(T::Tracker, timeOfFailure::Height)
 
     @assert !isinf(timeOfFailure) "Time of failure should be finite"
-
+    println("time of failure = $(timeOfFailure)")
     dir = direction(T)
     add_heights!(T, (timeOfFailure / 2)*dir)
     # choose a random point in height space
     targetSupports = tuple(copy.(supports(ambient_support(T)))...)
     # update all the heights to random values
     for S in targetSupports
-        for p in points(S)
+        for p in sort(points(S))
             if !isinf(S[p])
                 newHeight = QQ(rand(Int16))
                 update_height!(S, p, newHeight)
@@ -77,20 +77,35 @@ function perturb!(T::Tracker, timeOfFailure::Height)
     bergmanTimes = Dict{MixedCell, Height}()
     jensenTimes = Dict{MixedCell, Height}()
 
+    check_cached_times(newTracker)
+
     for σ in mixed_cells(newTracker)
-        # compute_bergman_time(T, σ)
-        #TODO: uncommenting line 81 makes everything work, but then bergman flip afterwards asks for a perturbation. Keeping it commented out, either the computation of bergman time or jensen time will complain that the initial data is invalid.
         bergmanTimes[σ] = compute_bergman_time(newTracker, σ)
         jensenTimes[σ] = compute_jensen_time(newTracker, σ)
     end
 
+    check_cached_times(newTracker)
+
     smallestTBergman = minimum([value for (key, value) in bergmanTimes])
     smallestTJensen = minimum([value for (key, value) in jensenTimes])
     smallestT = min(smallestTBergman, smallestTJensen) # the time at which we perform flips
+    println("smallestT = $(smallestT)")
+    println("smallestTBergman = $(smallestTBergman)")
+    println("smallestTJensen = $(smallestTJensen)")
     
     dir = direction(newTracker)
+    show_heights(T)
+    println("Showing heights in direction between heights after first rebase and targetMixedSupport")
+    show_heights(dir)
     add_heights!(T, (smallestT/2)*dir)
+    show_heights(T)
     add_heights!(first(targets(T)), (smallestT/2)*dir)
+
+    # delete all cached times
+    for σ in mixed_cells(T)
+        delete!(T.bergmanTimes, σ)
+        delete!(T.jensenTimes, σ)
+    end
 
 end
 
@@ -448,6 +463,35 @@ function update_cached_times!(T::Tracker, newMixedCells::Vector{MixedCell}, smal
         end
         if haskey(bergmanTimes, σ) && !isinf(bergmanTimes[σ])
             update_bergman_time!(T, σ, bergmanTimes[σ] - smallestT)
+        end
+    end
+
+    check_cached_times(T)
+end
+
+function show_heights(T::Tracker)
+    println("----------------------")
+    for p in sort(points(ambient_support(T)))
+        println("$(p) has height $(ambient_support(T)[p])")
+    end
+    println("----------------------")
+end
+
+function show_heights(Δ::MixedSupport)
+    println("----------------------")
+    for p in sort(points(Δ))
+        println("$(p) has height $(Δ[p])")
+    end
+    println("----------------------")
+end
+
+function check_cached_times(T::Tracker)
+    for σ in mixed_cells(T)
+        if haskey(T.bergmanTimes, σ)
+            @assert T.bergmanTimes[σ] == compute_bergman_time(T, σ, disable_cache=true) "Bergman time for $(σ) is not cached correctly"
+        end
+        if haskey(T.jensenTimes, σ)
+            @assert T.jensenTimes[σ] == compute_jensen_time(T, σ, disable_cache=true) "Jensen time for $(σ) is not cached correctly"
         end
     end
 end

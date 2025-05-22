@@ -3,7 +3,7 @@
 
 Return the time at which the mixed cell candidate `σ` breaches its mixed cell cone.
 """
-function compute_jensen_time(T::Tracker, σ::MixedCell)::Union{QQFieldElem,PosInf}
+function compute_jensen_time(T::Tracker, σ::MixedCell; disable_cache::Bool = false)::Union{QQFieldElem,PosInf}
 
     hypersurfaceDuals = transform_linear_support(chain_of_flats(σ))
 
@@ -27,7 +27,9 @@ function compute_jensen_time(T::Tracker, σ::MixedCell)::Union{QQFieldElem,PosIn
     jensenTime = minimum(timesOfIntersection)
 
     # cache the answer
-    update_jensen_time!(T, σ, jensenTime)
+    if !disable_cache
+        update_jensen_time!(T, σ, jensenTime)
+    end
 
     return jensenTime
 
@@ -45,7 +47,9 @@ function jensen_flip(T::Tracker, σ::MixedCell, tJensen::Height)
 
     C = mixed_cell_cone(δ, Δ)
 
-    @assert sum([dot(v, κ) * tJensen == -dot(Δ, κ) for κ in facets(C)]) == 1 "The mixed cell being tracked does not breach its mixed cell cone in exactly one facet."
+    if sum([dot(v, κ) * tJensen == -dot(Δ, κ) for κ in facets(C)]) != 1
+        return MixedCell[] # a perturbation is required since we do not have a unique breaking facet
+    end
 
     κ = facets(C)[findfirst(κ -> dot(v, κ) * tJensen == -dot(Δ, κ), facets(C))]
     @debug "The facet inequality broken is given by $(κ)"
@@ -54,7 +58,9 @@ function jensen_flip(T::Tracker, σ::MixedCell, tJensen::Height)
     # work out which mixed cell support this corresponds to (which active support)
     changingDualCell = supports(σ)[findfirst(is_subset(S, changingSupport) for S in supports(σ))]
 
-    @assert length(changingDualCell) == 2 "The changing dual cell is not minimal."
+    if length(changingDualCell) != 2 
+        return MixedCell[] # The changing dual cell is not minimal.
+    end
     newMixedCells = MixedCell[]
 
     for q in points(changingDualCell)

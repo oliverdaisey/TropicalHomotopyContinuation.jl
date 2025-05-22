@@ -83,6 +83,7 @@ function move!(T::Tracker)
         @debug "Intersection of Bergman and Jensen mixed cells is not empty. A perturbation was required."
         println("Performing a perturbation.")
         perturb!(T, smallestT)
+        println("Perturbation complete.")
         return true
     end
 
@@ -93,7 +94,13 @@ function move!(T::Tracker)
         update_number_of_bergman_moves!(T, 1)
         for σ in changingBergmanMixedCells
             @debug "Changing mixed cell: $σ."
-            push!(newMixedCells, bergman_flip(T, σ, smallestTBergman)...)
+            bergmanFlipNewMixedCells = bergman_flip(T, σ, smallestTBergman)
+            if isempty(bergmanFlipNewMixedCells)
+                # this means we need to perturb
+                perturb!(T, smallestT)
+                return move!(T)
+            end
+            append!(newMixedCells, bergmanFlipNewMixedCells)
             @debug "$(length(newMixedCells)) new mixed cells: $newMixedCells."
             remove_mixed_cell!(T, σ)
         end
@@ -104,7 +111,13 @@ function move!(T::Tracker)
         update_number_of_jensen_moves!(T, 1)
         for σ in changingJensenMixedCells
             @debug "Changing mixed cell: $σ."
-            push!(newMixedCells, jensen_flip(T, σ, smallestTJensen)...)
+            jensenFlipNewMixedCells = jensen_flip(T, σ, smallestTJensen)
+            if isempty(jensenFlipNewMixedCells)
+                # this means we need to perturb
+                perturb!(T, smallestT)
+                return move!(T)
+            end
+            append!(newMixedCells, jensenFlipNewMixedCells)
             @debug "$(length(newMixedCells) - l) new mixed cells: $(newMixedCells[l+1:end])."
             remove_mixed_cell!(T, σ)
         end
