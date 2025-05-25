@@ -3,6 +3,12 @@ using TropicalHomotopies
 using Test
 
 @testset "TropicalHomotopies.jl" begin
+    AbstractAlgebra.set_assertion_level(:TropicalHomotopies, 1)
+    AbstractAlgebra.set_assertion_level(:TropicalHomotopiesStart, 1)
+    AbstractAlgebra.set_assertion_level(:TropicalHomotopiesMove, 1)
+    AbstractAlgebra.set_assertion_level(:TropicalHomotopiesBergman, 1)
+    AbstractAlgebra.set_assertion_level(:TropicalHomotopiesJensen, 1)
+    AbstractAlgebra.set_assertion_level(:TropicalHomotopiesPerturb, 1)
 
     function straight_line_rigidity_example_test()
         # define matrix encoding linear ideal

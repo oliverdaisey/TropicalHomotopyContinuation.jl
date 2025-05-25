@@ -28,4 +28,30 @@ include("homotopy.jl")
 include("starting_system.jl")
 include("exports.jl")
 
+function __init__()
+    # scope for overall homotopies
+    add_verbosity_scope(:TropicalHomotopies)
+    add_assertion_scope(:TropicalHomotopies)
+
+    # scope for starting data
+    add_verbosity_scope(:TropicalHomotopiesStart)
+    add_assertion_scope(:TropicalHomotopiesStart)
+
+    # scope for the general move
+    add_verbosity_scope(:TropicalHomotopiesMove)
+    add_assertion_scope(:TropicalHomotopiesMove)
+
+    # scope for Bergman related functions (time and move)
+    add_verbosity_scope(:TropicalHomotopiesBergman)
+    add_assertion_scope(:TropicalHomotopiesBergman)
+
+    # scope for Jensen related functions (time and move)
+    add_verbosity_scope(:TropicalHomotopiesJensen)
+    add_assertion_scope(:TropicalHomotopiesJensen)
+
+    # scope for perturbation
+    add_verbosity_scope(:TropicalHomotopiesPerturb)
+    add_assertion_scope(:TropicalHomotopiesPerturb)
+end
+
 end

@@ -284,9 +284,6 @@ function cone(C::ChainOfFlats)
     # add all ones vector
 
 
-    @debug "Equalities: $(equalities)"
-    @debug "Inequalities: $(inequalities)"
-
     # if length(equalities) == 0
     #     return cone_from_inequalities(Oscar.matrix(QQ, inequalities))
     # else
