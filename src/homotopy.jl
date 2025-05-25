@@ -1,5 +1,3 @@
-export move!, tropical_homotopy_continuation, stable_intersection
-
 @doc raw"""
     move!(T::Tracker)
 

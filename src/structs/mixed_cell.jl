@@ -1,5 +1,3 @@
-export MixedCell, mixed_cell, points, chain_of_flats, active_support, supports, swap, has_same_active_support
-
 @doc raw"""
     MixedCellCandidate
 

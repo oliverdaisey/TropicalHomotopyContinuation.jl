@@ -1,5 +1,3 @@
-using Oscar
-
 @doc raw"""
     struct MixedSupport
 
