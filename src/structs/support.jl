@@ -154,7 +154,6 @@ function support(f::TropicalPolynomial)::Support
 
 end
 
-import Oscar.dot
 function dot(w::TropicalPoint, p::Point)
     return sum(w .* entries(p))
 end

@@ -208,8 +208,6 @@ function Base.convert(::Type{Polyhedron}, C::MixedCellCone)
     return polyhedron(A, b)
 end
 
-import Oscar.dot
-
 function dot(Δ::MixedSupport, κ::MixedCellConeFacet)
     return sum([QQ(circuit(κ)[p]) * QQ(Δ[p]) for p in keys(circuit(κ)) if !isinf(Δ[p])])
 end

@@ -31,7 +31,6 @@ function matroid(C::ChainOfFlats)
     return C.matroid
 end
 
-import Oscar.flats
 @doc raw"""
     flats(C::ChainOfFlats)
 

@@ -52,7 +52,6 @@ function ground_set(M::RealisableMatroid)
     return Set{Int}(1:ncols(matrix(M)))
 end
 
-import Oscar.flats
 @doc raw"""
     flats(M::RealisableMatroid)
 
