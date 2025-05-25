@@ -1,4 +1,5 @@
 using TropicalHomotopies
+using Oscar
 
 # define matrix encoding linear ideal
 linearMatrix = matrix(QQ, [1 1 0 0 0 0 0 0 0 0; -1 0 -1 -1 0 0 0 0 0 0; 0 -1 1 0 -1 0 0 0 0 0; 0 0 0 1 1 0 0 0 0 0; 0 0 0 0 0 1 1 0 0 0; 0 0 0 0 0 -1 0 -1 -1 0; 0 0 0 0 0 0 -1 1 0 -1; 0 0 0 0 0 0 0 0 1 1])
@@ -27,6 +28,5 @@ targetSupport = mixed_support(targetSupports)
 T = tracker(Δ, targetSupport, [σ], path=:straight_line)
 
 # compute the stable intersection
-# 30x faster than Oscar stable intersection
 AbstractAlgebra.set_verbosity_level(:TropicalHomotopies, 0)
 @time TropicalHomotopies.stable_intersection(T)
