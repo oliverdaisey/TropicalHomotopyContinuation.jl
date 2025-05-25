@@ -11,16 +11,19 @@ function compute_bergman_time(T::Tracker, σ::MixedCell; disable_cache::Bool = f
     w, u = tropical_intersection_point_and_drift(T, σ)
     inequalities, equalities = cone(chainOfFlats)
 
-    # check that we are inside the cone
-    if length(equalities) > 0
-        @assert all([sum(w .* v) == 0 for v in equalities]) "The intersection point is not in the cone (equality violated)"
-        @assert all([sum(w .* v) <= 0 for v in inequalities]) "The intersection point is not in the cone (inequality violated) intersection point: $(w) chain of flats: $(chainOfFlats)"
-    else
-        @assert all([sum(w .* v) <= 0 for v in inequalities]) "The intersection point is not in the cone"
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesBergman)>0
+        # check that we are inside the cone
+        if length(equalities) > 0
+            @assert all([sum(w .* v) == 0 for v in equalities]) "The intersection point is not in the cone (equality violated)"
+            @assert all([sum(w .* v) <= 0 for v in inequalities]) "The intersection point is not in the cone (inequality violated) intersection point: $(w) chain of flats: $(chainOfFlats)"
+        else
+            @assert all([sum(w .* v) <= 0 for v in inequalities]) "The intersection point is not in the cone"
+        end
     end
 
-    # removing this assertion for efficiency reasons
-    # @assert u in cone_from_equations(linear_equation_matrix(linear_span(C))) "The drift is not in the cone"
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesBergman)>1
+        @assert u in cone_from_equations(linear_equation_matrix(linear_span(C))) "The drift is not in the cone"
+    end
 
     timesOfIntersection = [sum(v.*u) != 0 ? -sum(v.*w) / sum(v.*u) : Nemo.PosInf() for v in inequalities]
     # delete all times that are less than 0
@@ -101,7 +104,7 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
         if Oscar.rank(A) != Oscar.rank(M*A)
             continue
         end
-    
+
         chainOfFlatsCone = polyhedron(positive_hull(transpose(A), ones_matrix(QQ, 1,nrows(A))))
         if Oscar.dim(intersect(jensenTrail, chainOfFlatsCone)) != 1
             continue
@@ -111,16 +114,17 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
 
     end
 
-    # check that the mixed cell data is valid
-    newMixedCells = mixed_cell.(Ref(active_support(σ)), allowedChains)
-    for σ in newMixedCells
-        # check that the matrix coming from σ is invertible
-        @assert is_transverse(σ) "$(σ) is not transverse"
-        @assert are_support_heights_finite(T, σ) "$(σ) has invalid mixed height data"
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesBergman)>0
+        # check that the mixed cell data is valid
+        newMixedCells = mixed_cell.(Ref(active_support(σ)), allowedChains)
+        for σ in newMixedCells
+            # check that the matrix coming from σ is invertible
+            @assert is_transverse(σ) "$(σ) is not transverse"
+            @assert are_support_heights_finite(T, σ) "$(σ) has invalid mixed height data"
+        end
+        @assert length(newMixedCells) > 0 "No new mixed cells during a Bergman flip"
     end
 
-    @assert length(newMixedCells) > 0 "No new mixed cells during a Bergman flip"
-    
     return mixed_cell.(Ref(active_support(σ)), allowedChains)
 
 end
@@ -156,7 +160,6 @@ end
 # orthogonal projection away from subspace spanned by columns of kernelMatrix
 function projection_matrix(kernelMatrix)
     _, invKernelMatrix = Oscar.is_invertible_with_inverse(transpose(kernelMatrix) * kernelMatrix)
-
     return kernelMatrix * invKernelMatrix * transpose(kernelMatrix)
 end
 
@@ -166,14 +169,10 @@ end
 Compute the oblique projection matrix from the subspace spanned by the columns of `A` onto the subspace spanned by the columns of `B`.
 """
 function oblique_projection_matrix(A, B)
-    @assert Oscar.rank(B) == ncols(B) "Matrix B is not full rank"
-    @assert Oscar.rank(A) == ncols(A) "Matrix A is not full rank"
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesBergman)>0
+        @assert Oscar.rank(B) == ncols(B) "Matrix B is not full rank"
+        @assert Oscar.rank(A) == ncols(A) "Matrix A is not full rank"
+    end
     _, invKernelMatrix = Oscar.is_invertible_with_inverse(transpose(B) * A)
     return A*(invKernelMatrix)*transpose(B)
-end
-
-
-# sanity check function
-function check_bergman_flip_output(σ::MixedCell)
-
 end

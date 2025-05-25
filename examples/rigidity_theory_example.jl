@@ -28,4 +28,5 @@ T = tracker(Δ, targetSupport, [σ], path=:straight_line)
 
 # compute the stable intersection
 # 30x faster than Oscar stable intersection
+AbstractAlgebra.set_verbosity_level(:TropicalHomotopies, 0)
 @time TropicalHomotopies.stable_intersection(T)

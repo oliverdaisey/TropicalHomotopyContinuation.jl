@@ -7,13 +7,17 @@ function compute_jensen_time(T::Tracker, σ::MixedCell; disable_cache::Bool = fa
 
     hypersurfaceDuals = transform_linear_support(chain_of_flats(σ))
 
-    @assert is_subset(active_support(σ), ambient_support(T)) "The active support of the mixed cell is not a subset of the ambient support."
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesJensen)>0
+        @assert is_subset(active_support(σ), ambient_support(T)) "The active support of the mixed cell is not a subset of the ambient support."
+    end
     δ = combine(active_support(σ), hypersurfaceDuals)
     Δ = combine(ambient_support(T), hypersurfaceDuals)
 
     C = mixed_cell_cone(δ, Δ)
 
-    @assert Δ in C "The mixed cell being tracked is not in the mixed cell cone."
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesJensen)>0
+        @assert Δ in C "The mixed cell being tracked is not in the mixed cell cone."
+    end
 
     v = direction(T)
 
@@ -52,29 +56,31 @@ function jensen_flip(T::Tracker, σ::MixedCell, tJensen::Height)
     end
 
     κ = facets(C)[findfirst(κ -> dot(v, κ) * tJensen == -dot(Δ, κ), facets(C))]
-    @debug "The facet inequality broken is given by $(κ)"
+    @vprintln :TropicalHomotopiesJensen "The facet inequality broken is given by $(κ)"
     p = extra_point(κ)
     changingSupport = supports(Δ)[findfirst(p in points(S) for S in supports(Δ))]
     # work out which mixed cell support this corresponds to (which active support)
     changingDualCell = supports(σ)[findfirst(is_subset(S, changingSupport) for S in supports(σ))]
 
-    if length(changingDualCell) != 2 
+    if length(changingDualCell) != 2
         return MixedCell[] # The changing dual cell is not minimal.
     end
     newMixedCells = MixedCell[]
 
     for q in points(changingDualCell)
         if κ[q] > 0
-            @debug "Adding mixed cell with $q in support and $p not in support"
+            @vprintln :TropicalHomotopiesJensen "Adding mixed cell with $q in support and $p not in support"
             # return mixed cell with p in support and q not in support
             push!(newMixedCells, swap(σ, q, p))
         end
     end
 
-    for σ in newMixedCells
-        # check that the matrix coming from σ is invertible
-        @assert is_transverse(σ) "$(σ) is not transverse"
-        @assert are_support_heights_finite(T, σ) "$(σ) has invalid mixed height data"
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesJensen)>0
+        for σ in newMixedCells
+            # check that the matrix coming from σ is invertible
+            @assert is_transverse(σ) "$(σ) is not transverse"
+            @assert are_support_heights_finite(T, σ) "$(σ) has invalid mixed height data"
+        end
     end
 
     return newMixedCells

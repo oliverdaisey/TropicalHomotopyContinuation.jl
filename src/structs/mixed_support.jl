@@ -77,7 +77,6 @@ function is_subset(S::MixedSupport, T::MixedSupport)
 
     for (s, t) in zip(supports(S), supports(T))
         if !is_subset(s, t)
-            @debug "Support $(s) is not a subset of $(t)"
             return false
         end
     end
