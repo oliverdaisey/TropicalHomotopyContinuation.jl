@@ -1,5 +1,4 @@
 using TropicalHomotopies
-import Oscar.matrix, Oscar.echelon_form, Oscar.QQ, Oscar.polynomial_ring, Oscar.randseed!, Oscar.set_seed!
 
 # define matrix encoding linear ideal
 linearMatrix = matrix(QQ, [1 1 0 0 0 0 0 0 0 0; -1 0 -1 -1 0 0 0 0 0 0; 0 -1 1 0 -1 0 0 0 0 0; 0 0 0 1 1 0 0 0 0 0; 0 0 0 0 0 1 1 0 0 0; 0 0 0 0 0 -1 0 -1 -1 0; 0 0 0 0 0 0 -1 1 0 -1; 0 0 0 0 0 0 0 0 1 1])
@@ -10,9 +9,9 @@ R, (x1,x2,x3,x4,x5,x6,x7,x8,x9,x10) = polynomial_ring(QQ, 10)
 M = matroid(linearMatrix)
 
 # define hypersurface supports
-# randseed!(31415296) # seed to reproduce bug (2 mixed cells)
-# randseed!(127) # 3 mixed cells at the end
-randseed!(143)
+# Oscar.randseed!(31415296) # seed to reproduce bug (2 mixed cells)
+# Oscar.randseed!(127) # 3 mixed cells at the end
+Oscar.randseed!(143)
 targetSupports = Support[]
 for i in [1,2,3,4,5]
         pi = TropicalHomotopies.point([n in [i,i+5] ? 1 : 0 for n in 1:10])

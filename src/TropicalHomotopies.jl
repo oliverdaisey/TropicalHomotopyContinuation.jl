@@ -2,6 +2,13 @@ module TropicalHomotopies
 
 using Oscar
 
+# the following functions in Oscar will be extended:
+import Oscar:
+    dot,
+    flats,
+    matrix,
+    stable_intersection
+
 include("structs/point.jl")
 include("structs/height.jl")
 include("structs/support.jl")
