@@ -79,7 +79,13 @@ function move!(T::Tracker)
     @debug "Mixed cells that are changing: Bergman cells: $(changingBergmanMixedCells) and Jensen cells: $(changingJensenMixedCells)."
 
     # these two lists should have empty intersection, if not, then a perturbation was required
-    @assert isempty(intersect(changingBergmanMixedCells, changingJensenMixedCells)) "A perturbation is required, but these are not implemented yet. Violating mixed cell(s): $(intersect(changingBergmanMixedCells, changingJensenMixedCells)). Bergman time(s): $(bergman_time.(Ref(T), intersect(changingBergmanMixedCells, changingJensenMixedCells))). Jensen time(s): $(jensen_time.(Ref(T), intersect(changingBergmanMixedCells, changingJensenMixedCells)))"
+    if !isempty(intersect(changingBergmanMixedCells, changingJensenMixedCells))
+        @debug "Intersection of Bergman and Jensen mixed cells is not empty. A perturbation was required."
+        println("Performing a perturbation.")
+        perturb!(T, smallestT)
+        println("Perturbation complete.")
+        return true
+    end
 
     newMixedCells = MixedCell[]
 
@@ -88,7 +94,13 @@ function move!(T::Tracker)
         update_number_of_bergman_moves!(T, 1)
         for σ in changingBergmanMixedCells
             @debug "Changing mixed cell: $σ."
-            push!(newMixedCells, bergman_flip(T, σ, smallestTBergman)...)
+            bergmanFlipNewMixedCells = bergman_flip(T, σ, smallestTBergman)
+            if isempty(bergmanFlipNewMixedCells)
+                # this means we need to perturb
+                perturb!(T, smallestT)
+                return move!(T)
+            end
+            append!(newMixedCells, bergmanFlipNewMixedCells)
             @debug "$(length(newMixedCells)) new mixed cells: $newMixedCells."
             remove_mixed_cell!(T, σ)
         end
@@ -99,7 +111,13 @@ function move!(T::Tracker)
         update_number_of_jensen_moves!(T, 1)
         for σ in changingJensenMixedCells
             @debug "Changing mixed cell: $σ."
-            push!(newMixedCells, jensen_flip(T, σ, smallestTJensen)...)
+            jensenFlipNewMixedCells = jensen_flip(T, σ, smallestTJensen)
+            if isempty(jensenFlipNewMixedCells)
+                # this means we need to perturb
+                perturb!(T, smallestT)
+                return move!(T)
+            end
+            append!(newMixedCells, jensenFlipNewMixedCells)
             @debug "$(length(newMixedCells) - l) new mixed cells: $(newMixedCells[l+1:end])."
             remove_mixed_cell!(T, σ)
         end
@@ -119,10 +137,23 @@ function move!(T::Tracker)
     @debug "New heights: $(dump_info(ambient_support(T)))."
 
     @debug "Merging $(length(newMixedCells)) new mixed cells."
+    newMixedCellWasMerged = []
     for σ in newMixedCells
         @debug "Merging mixed cell: $σ."
-        merge_mixed_cell!(T, σ)
+        push!(newMixedCellWasMerged, merge_mixed_cell!(T, σ))
     end
+
+    # preFlipMultiplicities = sum(multiplicity.(changingBergmanMixedCells); init=0) + sum(multiplicity.(changingJensenMixedCells); init=0)
+    # postFlipMultiplicities = sum(multiplicity.(newMixedCells[findall(newMixedCellWasMerged)]); init=0)
+
+    # if preFlipMultiplicities != postFlipMultiplicities
+    #     println("The flips in this move have changed the local multiplicities. This is not allowed.")
+    #     println("Pre flip multiplicities: $(preFlipMultiplicities). Post flip multiplicities: $(postFlipMultiplicities).")
+    #     println("Multiplicities of Bergman mixed cells: $(multiplicity.(changingBergmanMixedCells)).")
+    #     println("Multiplicities of Jensen mixed cells: $(multiplicity.(changingJensenMixedCells)).")
+    #     println("Multiplicities of new mixed cells: $(multiplicity.(newMixedCells)).")
+    #     @assert false "Asserted, check output"
+    # end
 
     # update the cached jensen and bergman times for the mixed cells that didn't change
     update_cached_times!(T, newMixedCells, smallestT)
@@ -139,10 +170,24 @@ function tropical_homotopy_continuation(T::Tracker)
     while move!(T) end
 end
 
-function stable_intersection(T::Tracker)::Vector{TropicalPoint}
+function stable_intersection(T::Tracker)# ::Vector{TropicalPoint}
     while move!(T) 
     @info "$(T.logger)"
+    println(length(mixed_cells(T)), " mixed cells being tracked")
     end
     @info "$(T.logger)"
+    display(mixed_cells(T))
+    mults = multiplicity.(mixed_cells(T))
+    pts = [first(tropical_intersection_point_and_drift(T, σ)) for σ in mixed_cells(T)]
+
+    uniquePts = unique(pts)
+    uniqueMults = zeros(Int, length(uniquePts))
+
+    for (p, m) in zip(pts, mults)
+        i = findfirst(t -> isequal(p, t), uniquePts)
+        uniqueMults[i] += m
+    end
+
+    return uniquePts, uniqueMults
     return [first(tropical_intersection_point_and_drift(T, σ)) for σ in mixed_cells(T)]
 end

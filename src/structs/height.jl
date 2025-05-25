@@ -11,3 +11,10 @@ function Base.convert(::Type{Height}, w)::Height
     end
     return QQ(w)
 end
+
+function Base.:+(α::Height, β::Height)::Height
+    if isinf(α) || isinf(β)
+        return PosInf()
+    end
+    return α + β
+end
