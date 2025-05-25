@@ -78,7 +78,7 @@ end
 Returns the mixed support obtained by replacing the chain of flats with a tuple of hypersurfaces whose intersection equals the span of the corresponding fine structure cone.
 """
 function transform_linear_support(C::ChainOfFlats)::MixedSupport
-    
+
     gens = indicator_vector.(flats(C))
     push!(gens, ones(Int, length(ground_set(matroid(C)))))
     # find basis of orthogonal complement of span(gens)
@@ -175,7 +175,7 @@ function are_support_heights_finite(Δ::MixedSupport, σ::MixedCell)
             return false
         end
     end
-    
+
     return true
 
 end
@@ -188,7 +188,7 @@ function tropical_polyhedra_spans_and_mults(σ::MixedCell)
 
         # compute multiplicity
         push!(mults, length(lattice_points(convex_hull(entries.(points(S)))))-1)
-        
+
 
         rows = Vector{QQFieldElem}[]
         pts = points(S)
@@ -203,7 +203,7 @@ function tropical_polyhedra_spans_and_mults(σ::MixedCell)
         push!(polyhedra, convex_hull(zero_matrix(QQ, 1, ncols(A)), zero_matrix(QQ, 0, ncols(A)), A))
 
     end
-    
+
     d = max(ambient_dim.(polyhedra)...)
 
     # add columns for each indicator vector of chain
@@ -213,7 +213,7 @@ function tropical_polyhedra_spans_and_mults(σ::MixedCell)
     cols = [col for col in cols if col != zeros(QQ, length(col))]
     A = Oscar.matrix(QQ, cols)
 
-    
+
     push!(polyhedra, convex_hull(zero_matrix(QQ, 1, ncols(A)), zero_matrix(QQ, 0, ncols(A)), A))
     push!(mults, 1)
 
@@ -223,7 +223,7 @@ end
 
 # slow
 function multiplicity(σ::MixedCell)
-    
+
     polyhedra, mults = tropical_polyhedra_spans_and_mults(σ)
 
     (C, m), rest = Iterators.peel(zip(polyhedra, mults))

@@ -6,9 +6,9 @@ Move the heights of the tracker `T` to the next flip time, updating all mixed ce
 If we would reach the target before or at any flip time, do nothing.
 """
 function move!(T::Tracker)
-    
+
     update_number_of_moves!(T, 1)
-    
+
     if isempty(mixed_cells(T))
         @error "No mixed cells to move. Something went wrong."
         return false
@@ -66,7 +66,7 @@ function move!(T::Tracker)
     else
         @debug "Jensen time is smaller than Bergman time."
     end
-    if smallestTBergman == smallestTJensen && smallestTBergman == smallestT 
+    if smallestTBergman == smallestTJensen && smallestTBergman == smallestT
         update_number_of_simultaneous_bergman_and_jensen_moves!(T, 1)
         @debug "Both Bergman and Jensen times are equal. Performing both moves."
     end
@@ -168,8 +168,8 @@ function tropical_homotopy_continuation(T::Tracker)
     while move!(T) end
 end
 
-function stable_intersection(T::Tracker)# ::Vector{TropicalPoint}
-    while move!(T) 
+function stable_intersection(T::Tracker) # ::Vector{TropicalPoint}
+    while move!(T)
     @info "$(T.logger)"
     println(length(mixed_cells(T)), " mixed cells being tracked")
     end
