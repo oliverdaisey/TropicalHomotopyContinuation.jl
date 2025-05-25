@@ -15,12 +15,12 @@ M = matroid(linearMatrix)
 randseed!(143)
 targetSupports = Support[]
 for i in [1,2,3,4,5]
-        pi = point([n in [i,i+5] ? 1 : 0 for n in 1:10])
-        p0 = point([0 for n in 1:10])
-            push!(targetSupports, support([pi,p0],[0,0]))
+        pi = TropicalHomotopies.point([n in [i,i+5] ? 1 : 0 for n in 1:10])
+        p0 = TropicalHomotopies.point([0 for n in 1:10])
+            push!(targetSupports, TropicalHomotopies.support([pi,p0],[0,0]))
 end
 # add an extra hypersurface to cut the common lineality space
-push!(targetSupports, support([point([1,0,0,0,0,0,0,0,0,0]),point([0,0,0,0,0,0,0,0,0,0])],[1,3]))
+push!(targetSupports, TropicalHomotopies.support([TropicalHomotopies.point([1,0,0,0,0,0,0,0,0,0]),TropicalHomotopies.point([0,0,0,0,0,0,0,0,0,0])],[1,3]))
 
 # define the target support
 targetSupport = mixed_support(targetSupports)
@@ -29,4 +29,4 @@ T = tracker(Δ, targetSupport, [σ], path=:straight_line)
 
 # compute the stable intersection
 # 30x faster than Oscar stable intersection
-display(stable_intersection(T))
+@time TropicalHomotopies.stable_intersection(T)
