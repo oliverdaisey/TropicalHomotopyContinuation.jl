@@ -63,60 +63,196 @@ Compute the Bergman flip of the mixed cell `σ` with tracker `T`.
 """
 function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
 
-    C = chain_of_flats(σ)
-    Δ = ambient_support(T)
+    # Compute the tropical intersection point and drift
     w, u = tropical_intersection_point_and_drift(T, σ)
 
-    unrefinedChain = chain_of_flats(matroid(C), w + tBergman * u)
-
-    if length(unrefinedChain) + 1 != length(C)
-        return MixedCell[] # need to perturb
+    # Compute the unrefined chain at the point of the Bergman flip
+    startingChain = chain_of_flats(σ)
+    unrefinedChain = chain_of_flats(matroid(startingChain), w + tBergman * u)
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesBergman)>0
+        # check that the unrefined chain is indeed non-maximal
+        # if violated, then input tBergman does not match computed w and u
+        @assert length(unrefinedChain) < length(startingChain) "The unrefined chain is maximal"
     end
 
+    # If unrefined chain has colength greater 1, we require a perturbation
+    if length(unrefinedChain) < + 1 != length(startingChain)
+        return MixedCell[] # empty return signal need for perturbation
+    end
+
+    # Otherwise, compute all maximal refinements
     refinedChains = maximal_refinements(unrefinedChain)
-    # make sure not to include the original chain
+
+    # Optimisation: remove original chain
     # refinedChains = [chain for chain in refinedChains if chain != C]
 
-    rows = Vector{QQFieldElem}[]
-    for S in supports(active_support(σ))
-        pts = points(S)
-        p1 = first(pts)
+    # Next, compute the jensen trail, i.e., we consider the stars of the tropical hypersurfaces
+    # around the intersection point, which only depends on the active support, and construct the
+    # path their intersection takes with varying t
+    jensenStarEquations = Vector{QQFieldElem}[]
+    for Si in supports(active_support(σ))
+        pts = points(Si)
+        p1 = first(pts) # TODO: can we use Iterators.peel here instead of isequal below?
         for p in pts
             if !is_equal(p1, p)
-                push!(rows, convert(Vector{QQFieldElem}, p1 - p))
+                push!(jensenStarEquations, convert(Vector{QQFieldElem}, p1 - p))
             end
         end
     end
-    M = Oscar.matrix(QQ, rows)
+    jensenStarLinearEquationMatrix = Oscar.matrix(QQ, jensenStarEquations)
+    jensenTrail = convex_hull([w + tBergman * u], [u], transpose(kernel(jensenStarLinearEquationMatrix, side=:right))) # only needed for old test
+    jensenStarAffineEquationsRHS = jensenStarLinearEquationMatrix * (w + (tBergman+1) * u)
 
-    jensenTrail = convex_hull([w + tBergman * u], [u], transpose(kernel(M, side=:right)))
+    ###
+    # Old test
+    ###
+    flippedChains = ChainOfFlats[]
+    for refinedChain in refinedChains
+        # construct the rays of the bergmanCone
+        bergmanConeRays = [ indicator_vector(Fj) for Fj in full_flats(refinedChain) if !isempty(Fj) ]
+        bergmanConeRayMatrix = Oscar.matrix(QQ, bergmanConeRays)
 
-    allowedChains = ChainOfFlats[]
-    for chain in refinedChains
-        # add columns for each indicator vector of chain
-        cols = Vector{QQFieldElem}[]
-        push!(cols, indicator_vector.(full_flats(chain))...)
-        # remove all zero vector from cols
-        cols = [col for col in cols if col != zeros(QQ, length(col))]
-        A = transpose(Oscar.matrix(QQ, cols))
-
-        # create the matrix formed by the supports
-        if Oscar.rank(A) != Oscar.rank(M*A)
+        # quick test: is the intersection of the bergmanCone and jensenStar transverse,
+        # i.e., does a bergmanConeRay lie in jensenStar?
+        if Oscar.rank(bergmanConeRayMatrix) != Oscar.rank(jensenStarLinearEquationMatrix*transpose(bergmanConeRayMatrix))
             continue
         end
 
-        chainOfFlatsCone = polyhedron(positive_hull(transpose(A), ones_matrix(QQ, 1,nrows(A))))
-        if Oscar.dim(intersect(jensenTrail, chainOfFlatsCone)) != 1
+        # comprehensive test: does the jensenTrail intersect bergmanCone in a line?
+        chainOfFlatsCone = positive_hull(bergmanConeRayMatrix, ones_matrix(QQ, 1,ncols(bergmanConeRayMatrix)))
+        if Oscar.dim(intersect(jensenTrail, polyhedron(chainOfFlatsCone))) != 1
             continue
         end
 
-        push!(allowedChains, chain)
-
+        push!(flippedChains, refinedChain)
     end
+
+    ###
+    # New test
+    ###
+    newFlippedChains = ChainOfFlats[]
+    for refinedChain in refinedChains
+        println("=======================================================")
+        println("Checking refined chain: $(refinedChain)")
+        # construct the linear equations of the span of the Bergman cone
+        println("full_flats(refinedChain): $(full_flats(refinedChain))")
+        bergmanConeRays = [ indicator_vector(Fj) for Fj in full_flats(refinedChain) if !isempty(Fj) ]
+        println("bergmanConeRays: $(bergmanConeRays)")
+        bergmanConeRayColumnMatrix = transpose(Oscar.matrix(QQ, bergmanConeRays))
+        println("bergmanConeRayColumnMatrix: $(bergmanConeRayColumnMatrix)")
+        bergmanConeSpanLinearEquations = kernel(bergmanConeRayColumnMatrix)
+
+        # assemble and solve the combined affine linear system from the Bergman linear equations
+        # and the jensen affine linear equations
+        affineLinearEquationsLHS = vcat(bergmanConeSpanLinearEquations, jensenStarLinearEquationMatrix)
+        affineLinearEquationsRHS = vcat(zeros(QQ, nrows(bergmanConeSpanLinearEquations)), jensenStarAffineEquationsRHS)
+        canSolve, solution, kernelGenerators = Oscar.can_solve_with_solution_and_kernel(affineLinearEquationsLHS, affineLinearEquationsRHS; side=:right)
+
+        # check whether the combined affine linear system has exactly one solution.
+        # if solution set is empty or positive-dimensional, then Jensen star and Bergman cone
+        # do not intersect transversally
+        println("can solve: $(canSolve)")
+        println("solution: $(solution)")
+        println("kernel generators:")
+        display(kernelGenerators)
+        if !canSolve || ncols(kernelGenerators)>0
+            println("The combined affine linear system does not have a unique solution, skipping this refined chain.")
+            continue
+        end
+
+        # check whether it lies on the right side of the Bergman facet.
+        println("breaking direction: $(breaking_direction(refinedChain, unrefinedChain))")
+        # println("solution on breaking direction: $(sum(breaking_direction(refinedChain, unrefinedChain) .* solution))")
+
+        # if sum(breaking_direction(refinedChain, unrefinedChain) .* solution) <= 0 # does not work, maybe bc breaking direction not orthogonal to lineality?
+        #     println("The solution does not lie on the right side of the Bergman facet, skipping this refined chain.")
+        #     continue
+        # end
+
+
+        bergmanConeStar = cone_from_inequalities([breaking_direction(refinedChain, unrefinedChain)],bergmanConeSpanLinearEquations) # TODO: something is wrong here, sometimes -breaking_direction gives the right answer, and sometimes +breaking_direction gives the right answer
+        if !(solution in bergmanConeStar)
+            println("The solution does not lie in the Bergman cone star, skipping this refined chain.")
+            continue
+        end
+
+        println("Found refined chain: $(refinedChain)")
+        push!(newFlippedChains, refinedChain)
+    end
+
+    println("=======================================================")
+    println("=======================================================")
+    println("=======================================================")
+
+    if !issetequal(newFlippedChains, flippedChains)
+        println("Old flipped chains: $(flippedChains)")
+        println("New flipped chains: $(newFlippedChains)")
+
+        println("w: $(w)")
+        println("u: $(u)")
+        println("tBergman: $(tBergman)")
+
+        println("jensenStarLinearEquationMatrix: $(jensenStarLinearEquationMatrix)")
+
+        ###
+        # Debugging first old flipped chain that is not in new flipped chains
+        ###
+        refinedChain = first(flippedChains)
+        println("taking first old refined chain: $(refinedChain)")
+
+        bergmanConeRays = [ indicator_vector(Fj) for Fj in full_flats(refinedChain) if !isempty(Fj) ]
+        bergmanConeRayColumnMatrix = transpose(Oscar.matrix(QQ, bergmanConeRays))
+        bergmanConeSpanLinearEquations = kernel(bergmanConeRayColumnMatrix)
+        println("linear equations of the span of the Bergman cone:")
+        display(bergmanConeSpanLinearEquations)
+
+        affineLinearEquationsLHS = vcat(bergmanConeSpanLinearEquations, jensenStarLinearEquationMatrix)
+        affineLinearEquationsRHS = vcat(zeros(QQ, nrows(bergmanConeSpanLinearEquations)), jensenStarAffineEquationsRHS)
+        println("bergmanConeSpanLinearEquations: $(bergmanConeSpanLinearEquations)")
+        display(bergmanConeSpanLinearEquations)
+        println("jensenStarLinearEquationMatrix: $(jensenStarLinearEquationMatrix)")
+        display(jensenStarLinearEquationMatrix)
+        println("jensenStarAffineEquationsRHS: $(jensenStarAffineEquationsRHS)")
+        println("affine linear equations LHS: $(affineLinearEquationsLHS)")
+        display(affineLinearEquationsLHS)
+        println("affine linear equations RHS: $(affineLinearEquationsRHS)")
+
+        canSolve, solution, kernelGenerators = Oscar.can_solve_with_solution_and_kernel(affineLinearEquationsLHS, affineLinearEquationsRHS; side=:right)
+        println("can solve: $(canSolve)")
+        println("solution: $(solution)")
+        println("kernel generators: $(kernelGenerators)")
+
+        bergmanCone = positive_hull(transpose(bergmanConeRayColumnMatrix), ones_matrix(QQ, 1,nrows(bergmanConeRayColumnMatrix)))
+        println("bergmanConeRayColumnMatrix: $(bergmanConeRayColumnMatrix)")
+        println("solution in bergmanCone: $(solution in bergmanCone)")
+
+        println("breaking direction: $(breaking_direction(refinedChain, unrefinedChain))")
+        println("bergmanConeSpanLinearEquations: $(bergmanConeSpanLinearEquations)")
+        println("solution: $(solution)")
+
+        # ###
+        # # Debugging last new flipped chain not in old flipped chains
+        # ###
+        # refinedChain = last(newFlippedChains)
+        # println("taking last new refined chain: $(refinedChain)")
+
+        # bergmanConeRays = [ indicator_vector(Fj) for Fj in full_flats(refinedChain) if !isempty(Fj) ]
+        # bergmanConeRayMatrix = Oscar.matrix(QQ, bergmanConeRays)
+        # println("bergmanConeRayMatrix: $(bergmanConeRayMatrix)")
+
+        # println("Oscar.rank(bergmanConeRayMatrix): $(Oscar.rank(bergmanConeRayMatrix))")
+        # println("Oscar.rank(jensenStarLinearEquationMatrix*transpose(bergmanConeRayMatrix)): $(Oscar.rank(jensenStarLinearEquationMatrix*transpose(bergmanConeRayMatrix)))")
+
+        # chainOfFlatsCone = positive_hull(bergmanConeRayMatrix, ones_matrix(QQ, 1,ncols(bergmanConeRayMatrix)))
+        # println("Oscar.dim(intersect(jensenTrail, polyhedron(chainOfFlatsCone))): $(Oscar.dim(intersect(jensenTrail, polyhedron(chainOfFlatsCone))))")
+
+        @assert false "The new flipped chains and the old flipped chains should be the same"
+    end
+
 
     if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesBergman)>0
         # check that the mixed cell data is valid
-        newMixedCells = mixed_cell.(Ref(active_support(σ)), allowedChains)
+        newMixedCells = mixed_cell.(Ref(active_support(σ)), flippedChains)
         for σ in newMixedCells
             # check that the matrix coming from σ is invertible
             @assert is_transverse(σ) "$(σ) is not transverse"
@@ -125,7 +261,7 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
         @assert length(newMixedCells) > 0 "No new mixed cells during a Bergman flip"
     end
 
-    return mixed_cell.(Ref(active_support(σ)), allowedChains)
+    return mixed_cell.(Ref(active_support(σ)), flippedChains)
 
 end
 
