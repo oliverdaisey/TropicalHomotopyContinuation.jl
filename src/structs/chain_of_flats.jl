@@ -403,3 +403,27 @@ function breaking_direction(maximalChainOfFlats::ChainOfFlats, nonmaximalChainOf
 
     return 2*indicator_vector(maximalChain[changingFlat]) - indicator_vector(maximalChain[changingFlat+1]) - indicator_vector(maximalChain[changingFlat - 1])
 end
+
+
+function bergman_cone_star(maximalChainOfFlats::ChainOfFlats, nonmaximalChainOfFlats::ChainOfFlats)
+    println("maximalChainOfFlats: ", maximalChainOfFlats)
+    println("nonmaximalChainOfFlats: ", nonmaximalChainOfFlats)
+    @assert matroid(maximalChainOfFlats) == matroid(nonmaximalChainOfFlats) "The matroids of the chains of flats must be the same"
+    @assert length(flats(maximalChainOfFlats)) == length(flats(nonmaximalChainOfFlats))+1 "nonmaximalChainOfFlats must have colength 1"
+
+    facetRays = [ indicator_vector(Fj) for Fj in full_flats(nonmaximalChainOfFlats) if !isempty(Fj) ]
+
+    println("flats(maximalChainOfFlats): ", flats(maximalChainOfFlats))
+    println("flats(nonmaximalChainOfFlats): ", flats(nonmaximalChainOfFlats))
+
+    extraFlatIndex = findfirst(Fj->!(Fj in flats(nonmaximalChainOfFlats)), flats(maximalChainOfFlats)) # TODO: this can be sped up
+    @assert !isnothing(extraFlatIndex) "There must be a flat that is different in the two chains of flats"
+    extraFlat = flats(maximalChainOfFlats)[extraFlatIndex]
+    extraRay = indicator_vector(extraFlat)
+
+    println("facetRays: ", facetRays)
+    println("extraRay: ", extraRay)
+
+
+    return positive_hull([extraRay],facetRays)
+end
