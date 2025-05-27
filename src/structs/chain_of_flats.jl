@@ -440,9 +440,11 @@ function induces_refinement(chain::ChainOfFlats, subchain::ChainOfFlats, tiebrea
     @assert matroid(chain) == matroid(subchain) "The matroids of the chains of flats must be the same"
     @assert length(flats(chain)) == length(flats(subchain))+1 "nonmaximalChainOfFlats must have colength 1"
 
+    setsInChain = TropicalHomotopies.elements.(full_flats(chain))
+
     # iterate over the reduced flats of the subchain, partition them further using the tiebreaker
     # and verify that all resulting flats are contained in the chain
-    Finduced = empty_flat(matroid(chain))
+    Finduced = Set{Int}()
     for Fred in reduced_flats(subchain)
 
         # partition Fred using the tiebreaker in the form of a Dict
@@ -457,15 +459,8 @@ function induces_refinement(chain::ChainOfFlats, subchain::ChainOfFlats, tiebrea
         # iterate over keys of the Dict in descending order,
         # and add them to Finduced and check if it is in the chain
         for key in sort(collect(keys(FredPartition)), rev=true)
-            println("key: ", key)
-            println("Finduced (old): ", Finduced)
-            println("FredPartition[key]: ", FredPartition[key])
-            println("union(elements(Finduced), FredPartition[key]): ", union(elements(Finduced), FredPartition[key]))
-            Finduced = flat(matroid(chain),union(elements(Finduced), FredPartition[key]))
-            println("Finduced (new): ", Finduced)
-            println("full_flats(chain): ", full_flats(chain))
-            println("Finduced in full_flats(chain): ", Finduced in full_flats(chain))
-            if !(Finduced in full_flats(chain))
+            Finduced = union(Finduced, FredPartition[key])
+            if !(Finduced in setsInChain)
                 # induced flat not in chain
                 return false
             end
