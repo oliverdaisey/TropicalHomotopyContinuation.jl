@@ -67,7 +67,7 @@ Construct a flat from a matroid and elements. Raises an error if the elements do
 """
 function flat(M::RealisableMatroid, elements::Set{Int})
     @assert closure(M, elements) == elements "The elements $(elements) do not index a valid flat"
-    return flat(matroid(M), elements)
+    return Flat(M, elements)
 end
 
 @doc raw"""
