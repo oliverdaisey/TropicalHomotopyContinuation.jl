@@ -457,13 +457,15 @@ function induces_refinement(chain::ChainOfFlats, subchain::ChainOfFlats, tiebrea
         # iterate over keys of the Dict in descending order,
         # and add them to Finduced and check if it is in the chain
         for key in sort(collect(keys(FredPartition)), rev=true)
-            Finduced = flat(matroid(chain),union(elements(Finduced), FredPartition[key]))
             println("key: ", key)
+            println("Finduced (old): ", Finduced)
             println("FredPartition[key]: ", FredPartition[key])
-            println("Finduced: ", Finduced)
-            println("flats(chain): ", flats(chain))
-            println("Finduced in flats(chain): ", Finduced in flats(chain))
-            if !(Finduced in flats(chain))
+            println("union(elements(Finduced), FredPartition[key]): ", union(elements(Finduced), FredPartition[key]))
+            Finduced = flat(matroid(chain),union(elements(Finduced), FredPartition[key]))
+            println("Finduced (new): ", Finduced)
+            println("full_flats(chain): ", full_flats(chain))
+            println("Finduced in full_flats(chain): ", Finduced in full_flats(chain))
+            if !(Finduced in full_flats(chain))
                 # induced flat not in chain
                 return false
             end
