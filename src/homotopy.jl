@@ -184,7 +184,7 @@ function stable_intersection(T::Tracker) # ::Vector{TropicalPoint}
     uniqueMults = zeros(Int, length(uniquePts))
 
     for (p, m) in zip(pts, mults)
-        i = findfirst(t -> isequal(p, t), uniquePts)
+        i = findfirst(t -> is_equal(p, t), uniquePts)
         uniqueMults[i] += m
     end
 

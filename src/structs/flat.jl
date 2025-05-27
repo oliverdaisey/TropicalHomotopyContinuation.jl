@@ -56,7 +56,7 @@ Construct a flat from a matroid and a set of elements. Raises an error if the el
 function flat(M::Matroid, elements::Set{Int})
     # check that the elements actually index a flat in M
     @assert elements in Set.(Oscar.flats(M)) "Did not provide valid elements for a flat"
-    # @assert !isequal(elements, ground_set(M)) "Cannot be the ground set"
+    # @assert !is_equal(elements, ground_set(M)) "Cannot be the ground set"
     return Flat(M, elements)
 end
 
@@ -128,12 +128,19 @@ function Base.isempty(F::Flat)
     return isempty(elements(F))
 end
 
-function Base.isequal(F::Flat, G::Flat)
+function isequal(F::Flat, G::Flat)
     return elements(F) == elements(G) && matroid(F) == matroid(G)
 end
 
 function Base.:(==)(F::Flat, G::Flat)
-    return Base.isequal(F,G)
+    return isequal(F,G)
+end
+
+function Base.hash(F::Flat, h::UInt)
+    # Combine hashes of sorted elements to make sure set equality aligns with hash equality
+    elements_hash = hash(sort(collect(F.elements)), h)
+    matroid_hash = hash(F.matroid, h)
+    return hash((matroid_hash, elements_hash), h)
 end
 
 

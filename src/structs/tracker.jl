@@ -157,7 +157,7 @@ function tropical_intersection_point_and_drift(T::Tracker, σ::MixedCell)::Union
     p1 = first(pts)
 
     for p in pts
-        if !isequal(p1, p)
+        if !is_equal(p1, p)
             push!(rows, p1 - p)
             push!(heights, 0)
             push!(dir, 0)
@@ -175,7 +175,7 @@ function tropical_intersection_point_and_drift(T::Tracker, σ::MixedCell)::Union
         end
 
         for p in points(S)
-            if !isequal(p1, p) # && !isinf(Δ[p])
+            if !is_equal(p1, p) # && !isinf(Δ[p])
                 push!(rows, p1 - p)
                 push!(heights, Δ[p] - Δ[p1])
                 push!(dir, τ[p] - τ[p1])
@@ -204,7 +204,7 @@ function merge_mixed_cell!(T::Tracker, σ::MixedCell)::Bool
         # the active supports need to be the same
         if has_same_active_support(τ, σ)
             # the chains of flats need to be the same
-            if isequal(chain_of_flats(τ), chain_of_flats(σ))
+            if is_equal(chain_of_flats(τ), chain_of_flats(σ))
                 return false
             end
         end

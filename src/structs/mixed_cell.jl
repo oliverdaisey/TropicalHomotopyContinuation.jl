@@ -149,7 +149,7 @@ function is_transverse(σ::MixedCell)
     p1 = first(pts)
 
     for p in pts
-        if !isequal(p1, p)
+        if !is_equal(p1, p)
             push!(rows, p1 - p)
         end
     end
@@ -157,7 +157,7 @@ function is_transverse(σ::MixedCell)
     for S in supports(Δ)
         p1 = first(points(S))
         for p in points(S)
-            if !isequal(p1, p)
+            if !is_equal(p1, p)
                 push!(rows, p1 - p)
             end
         end
@@ -194,7 +194,7 @@ function tropical_polyhedra_spans_and_mults(σ::MixedCell)
         pts = points(S)
         p1 = first(pts)
         for p in pts
-            if !isequal(p1, p)
+            if !is_equal(p1, p)
                 push!(rows, convert(Vector{QQFieldElem}, p1 - p))
             end
         end

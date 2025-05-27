@@ -206,7 +206,7 @@ function is_subsequence(sub::Vector{T}, vec::Vector{T})::Bool where T
     # Iterate through each element in sub
     for s in sub
         # Find the index of s in vec, starting after the last matched index
-        found_index = findnext(x -> isequal(x, s), vec, last_matched_index + 1)
+        found_index = findnext(x -> is_equal(x, s), vec, last_matched_index + 1)
 
         # If not found, or found at an earlier index, return false
         if isnothing(found_index)
@@ -238,7 +238,7 @@ function loopless_face(C::ChainOfFlats)
             for i in candidateBasis
                 v[i] = -1
             end
-            if isnothing(findfirst(isequal(v, entries(x)) for x in looplessFaceVertices))
+            if isnothing(findfirst(is_equal(v, entries(x)) for x in looplessFaceVertices))
                 push!(looplessFaceVertices, Point(v))
             end
         end

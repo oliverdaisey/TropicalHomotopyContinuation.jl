@@ -82,7 +82,7 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
         pts = points(S)
         p1 = first(pts)
         for p in pts
-            if !isequal(p1, p)
+            if !is_equal(p1, p)
                 push!(rows, convert(Vector{QQFieldElem}, p1 - p))
             end
         end
