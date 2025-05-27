@@ -4,6 +4,21 @@ using TropicalHomotopies
 include("examples/rigidity_theory_example.jl")
 
 
+M = matrix(QQ,[1 0 1; 0 1 1])
+Mmat = matroid(RealisableMatroid(M,2))
+F = TropicalHomotopies.flat(Mmat, Set{Int}([1]))
+G = TropicalHomotopies.flat(matroid(RealisableMatroid(M,2)), Set{Int}([1]))
+G in [F]
+
+
+
+# unrefined reduced flat: 6,8,9,10
+# refined reduced flats: 6,8 and 9,10
+solution = QQFieldElem[-344, -635, -635, -1145//2, -635, -604, -897//2, -604, -1209//2, -1209//2]
+
+
+
+
 w = QQFieldElem[-344, -635, -635, -572, -635, -604, -434, -604, -604, -590]
 u = QQFieldElem[0, 0, 0, 0, 0, 0, -1//2, 0, 0, -1//2]
 tBergman = 28

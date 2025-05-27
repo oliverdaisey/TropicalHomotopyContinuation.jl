@@ -103,35 +103,35 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
     jensenTrail = convex_hull([w + tBergman * u], [u], transpose(kernel(jensenStarLinearEquationMatrix, side=:right))) # only needed for old test
     jensenStarAffineEquationsRHS = jensenStarLinearEquationMatrix * (w + (tBergman+1) * u)
 
-    # ###
-    # # Old test
-    # ###
-    # flippedChains = ChainOfFlats[]
-    # for refinedChain in refinedChains
-    #     # construct the rays of the bergmanCone
-    #     bergmanConeRays = [ indicator_vector(Fj) for Fj in full_flats(refinedChain) if !isempty(Fj) ]
-    #     bergmanConeRayMatrix = Oscar.matrix(QQ, bergmanConeRays)
+    ###
+    # Old test
+    ###
+    flippedChains = ChainOfFlats[]
+    for refinedChain in refinedChains
+        # construct the rays of the bergmanCone
+        bergmanConeRays = [ indicator_vector(Fj) for Fj in full_flats(refinedChain) if !isempty(Fj) ]
+        bergmanConeRayMatrix = Oscar.matrix(QQ, bergmanConeRays)
 
-    #     # quick test: is the intersection of the bergmanCone and jensenStar transverse,
-    #     # i.e., does a bergmanConeRay lie in jensenStar?
-    #     if Oscar.rank(bergmanConeRayMatrix) != Oscar.rank(jensenStarLinearEquationMatrix*transpose(bergmanConeRayMatrix))
-    #         continue
-    #     end
+        # quick test: is the intersection of the bergmanCone and jensenStar transverse,
+        # i.e., does a bergmanConeRay lie in jensenStar?
+        if Oscar.rank(bergmanConeRayMatrix) != Oscar.rank(jensenStarLinearEquationMatrix*transpose(bergmanConeRayMatrix))
+            continue
+        end
 
-    #     # comprehensive test: does the jensenTrail intersect bergmanCone in a line?
-    #     chainOfFlatsCone = positive_hull(bergmanConeRayMatrix, ones_matrix(QQ, 1,ncols(bergmanConeRayMatrix)))
-    #     if Oscar.dim(intersect(jensenTrail, polyhedron(chainOfFlatsCone))) != 1
-    #         continue
-    #     end
+        # comprehensive test: does the jensenTrail intersect bergmanCone in a line?
+        chainOfFlatsCone = positive_hull(bergmanConeRayMatrix, ones_matrix(QQ, 1,ncols(bergmanConeRayMatrix)))
+        if Oscar.dim(intersect(jensenTrail, polyhedron(chainOfFlatsCone))) != 1
+            continue
+        end
 
-    #     push!(flippedChains, refinedChain)
-    # end
+        push!(flippedChains, refinedChain)
+    end
 
     ###
     # New test
     ###
-    # newFlippedChains = ChainOfFlats[]
-    flippedChains = ChainOfFlats[]
+    newFlippedChains = ChainOfFlats[]
+    # flippedChains = ChainOfFlats[]
     for refinedChain in refinedChains
         println("=======================================================")
         println("Checking refined chain: $(refinedChain)")
@@ -171,89 +171,96 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
         # end
 
 
-        # bergmanConeStar = cone_from_inequalities([breaking_direction(refinedChain, unrefinedChain)],bergmanConeSpanLinearEquations) # TODO: something is wrong here, sometimes -breaking_direction gives the right answer, and sometimes +breaking_direction gives the right answer
-        bergmanConeStar = bergman_cone_star(refinedChain, unrefinedChain)
-        println("refinedChain: $(refinedChain)")
-        println("unrefinedChain: $(unrefinedChain)")
-        println("solution in bergmanConeStar: $(solution in bergmanConeStar)")
-        if !(solution in bergmanConeStar)
-            println("The solution does not lie in the Bergman cone star, skipping this refined chain.")
+        # bergmanConeStar = bergman_cone_star(refinedChain, unrefinedChain)
+        # println("refinedChain: $(refinedChain)")
+        # println("unrefinedChain: $(unrefinedChain)")
+        # println("solution in bergmanConeStar: $(solution in bergmanConeStar)")
+        # if !(solution in bergmanConeStar)
+        #     println("The solution does not lie in the Bergman cone star, skipping this refined chain.")
+        #     continue
+        # end
+
+        # check whether solution induces refinedChain from unrefinedChain
+        if !(induces_refinement(refinedChain, unrefinedChain, solution))
+            println("The solution does not induce the refined chain from the unrefined chain, skipping this refined chain.")
             continue
         end
 
+
         println("Found refined chain: $(refinedChain)")
-        push!(flippedChains, refinedChain)
+        push!(newFlippedChains, refinedChain)
+        # push!(flippedChains, refinedChain)
     end
 
     println("=======================================================")
     println("=======================================================")
     println("=======================================================")
 
-    # if !issetequal(newFlippedChains, flippedChains)
-    #     println("Unrefined chain: $(unrefinedChain)")
-    #     println("Old flipped chains: $(flippedChains)")
-    #     println("New flipped chains: $(newFlippedChains)")
+    if !issetequal(newFlippedChains, flippedChains)
+        println("Unrefined chain: $(unrefinedChain)")
+        println("Old flipped chains: $(flippedChains)")
+        println("New flipped chains: $(newFlippedChains)")
 
-    #     println("w: $(w)")
-    #     println("u: $(u)")
-    #     println("tBergman: $(tBergman)")
+        println("w: $(w)")
+        println("u: $(u)")
+        println("tBergman: $(tBergman)")
 
-    #     println("jensenStarLinearEquationMatrix: $(jensenStarLinearEquationMatrix)")
+        println("jensenStarLinearEquationMatrix: $(jensenStarLinearEquationMatrix)")
 
-    #     ###
-    #     # Debugging last new flipped chain that is not in the old flipped chains
-    #     ###
-    #     refinedChain = last(newFlippedChains)
-    #     println("taking last new refined chain: $(refinedChain)")
+        ###
+        # Debugging first old flipped chain that is not in the new flipped chains
+        ###
+        refinedChain = first(flippedChains)
+        println("taking first old refined chain: $(refinedChain)")
 
-    #     bergmanConeRays = [ indicator_vector(Fj) for Fj in full_flats(refinedChain) if !isempty(Fj) ]
-    #     bergmanConeRayColumnMatrix = transpose(Oscar.matrix(QQ, bergmanConeRays))
-    #     bergmanConeSpanLinearEquations = kernel(bergmanConeRayColumnMatrix)
-    #     println("linear equations of the span of the Bergman cone:")
-    #     display(bergmanConeSpanLinearEquations)
+        bergmanConeRays = [ indicator_vector(Fj) for Fj in full_flats(refinedChain) if !isempty(Fj) ]
+        bergmanConeRayColumnMatrix = transpose(Oscar.matrix(QQ, bergmanConeRays))
+        bergmanConeSpanLinearEquations = kernel(bergmanConeRayColumnMatrix)
+        println("linear equations of the span of the Bergman cone:")
+        display(bergmanConeSpanLinearEquations)
 
-    #     affineLinearEquationsLHS = vcat(bergmanConeSpanLinearEquations, jensenStarLinearEquationMatrix)
-    #     affineLinearEquationsRHS = vcat(zeros(QQ, nrows(bergmanConeSpanLinearEquations)), jensenStarAffineEquationsRHS)
-    #     println("bergmanConeSpanLinearEquations: $(bergmanConeSpanLinearEquations)")
-    #     display(bergmanConeSpanLinearEquations)
-    #     println("jensenStarLinearEquationMatrix: $(jensenStarLinearEquationMatrix)")
-    #     display(jensenStarLinearEquationMatrix)
-    #     println("jensenStarAffineEquationsRHS: $(jensenStarAffineEquationsRHS)")
-    #     println("affine linear equations LHS: $(affineLinearEquationsLHS)")
-    #     display(affineLinearEquationsLHS)
-    #     println("affine linear equations RHS: $(affineLinearEquationsRHS)")
+        affineLinearEquationsLHS = vcat(bergmanConeSpanLinearEquations, jensenStarLinearEquationMatrix)
+        affineLinearEquationsRHS = vcat(zeros(QQ, nrows(bergmanConeSpanLinearEquations)), jensenStarAffineEquationsRHS)
+        println("bergmanConeSpanLinearEquations: $(bergmanConeSpanLinearEquations)")
+        display(bergmanConeSpanLinearEquations)
+        println("jensenStarLinearEquationMatrix: $(jensenStarLinearEquationMatrix)")
+        display(jensenStarLinearEquationMatrix)
+        println("jensenStarAffineEquationsRHS: $(jensenStarAffineEquationsRHS)")
+        println("affine linear equations LHS: $(affineLinearEquationsLHS)")
+        display(affineLinearEquationsLHS)
+        println("affine linear equations RHS: $(affineLinearEquationsRHS)")
 
-    #     canSolve, solution, kernelGenerators = Oscar.can_solve_with_solution_and_kernel(affineLinearEquationsLHS, affineLinearEquationsRHS; side=:right)
-    #     println("can solve: $(canSolve)")
-    #     println("solution: $(solution)")
-    #     println("kernel generators: $(kernelGenerators)")
+        canSolve, solution, kernelGenerators = Oscar.can_solve_with_solution_and_kernel(affineLinearEquationsLHS, affineLinearEquationsRHS; side=:right)
+        println("can solve: $(canSolve)")
+        println("solution: $(solution)")
+        println("kernel generators: $(kernelGenerators)")
 
-    #     bergmanCone = positive_hull(transpose(bergmanConeRayColumnMatrix), ones_matrix(QQ, 1,nrows(bergmanConeRayColumnMatrix)))
-    #     println("bergmanConeRayColumnMatrix: $(bergmanConeRayColumnMatrix)")
-    #     println("solution in bergmanCone: $(solution in bergmanCone)")
+        bergmanCone = positive_hull(transpose(bergmanConeRayColumnMatrix), ones_matrix(QQ, 1,nrows(bergmanConeRayColumnMatrix)))
+        println("bergmanConeRayColumnMatrix: $(bergmanConeRayColumnMatrix)")
+        println("solution in bergmanCone: $(solution in bergmanCone)")
 
-    #     println("breaking direction: $(breaking_direction(refinedChain, unrefinedChain))")
-    #     println("bergmanConeSpanLinearEquations: $(bergmanConeSpanLinearEquations)")
-    #     println("solution: $(solution)")
+        println("breaking direction: $(breaking_direction(refinedChain, unrefinedChain))")
+        println("bergmanConeSpanLinearEquations: $(bergmanConeSpanLinearEquations)")
+        println("solution: $(solution)")
 
-    #     # ###
-    #     # # Debugging last new flipped chain not in old flipped chains
-    #     # ###
-    #     # refinedChain = last(newFlippedChains)
-    #     # println("taking last new refined chain: $(refinedChain)")
+        # ###
+        # # Debugging last new flipped chain not in old flipped chains
+        # ###
+        # refinedChain = last(newFlippedChains)
+        # println("taking last new refined chain: $(refinedChain)")
 
-    #     # bergmanConeRays = [ indicator_vector(Fj) for Fj in full_flats(refinedChain) if !isempty(Fj) ]
-    #     # bergmanConeRayMatrix = Oscar.matrix(QQ, bergmanConeRays)
-    #     # println("bergmanConeRayMatrix: $(bergmanConeRayMatrix)")
+        # bergmanConeRays = [ indicator_vector(Fj) for Fj in full_flats(refinedChain) if !isempty(Fj) ]
+        # bergmanConeRayMatrix = Oscar.matrix(QQ, bergmanConeRays)
+        # println("bergmanConeRayMatrix: $(bergmanConeRayMatrix)")
 
-    #     # println("Oscar.rank(bergmanConeRayMatrix): $(Oscar.rank(bergmanConeRayMatrix))")
-    #     # println("Oscar.rank(jensenStarLinearEquationMatrix*transpose(bergmanConeRayMatrix)): $(Oscar.rank(jensenStarLinearEquationMatrix*transpose(bergmanConeRayMatrix)))")
+        # println("Oscar.rank(bergmanConeRayMatrix): $(Oscar.rank(bergmanConeRayMatrix))")
+        # println("Oscar.rank(jensenStarLinearEquationMatrix*transpose(bergmanConeRayMatrix)): $(Oscar.rank(jensenStarLinearEquationMatrix*transpose(bergmanConeRayMatrix)))")
 
-    #     # chainOfFlatsCone = positive_hull(bergmanConeRayMatrix, ones_matrix(QQ, 1,ncols(bergmanConeRayMatrix)))
-    #     # println("Oscar.dim(intersect(jensenTrail, polyhedron(chainOfFlatsCone))): $(Oscar.dim(intersect(jensenTrail, polyhedron(chainOfFlatsCone))))")
+        # chainOfFlatsCone = positive_hull(bergmanConeRayMatrix, ones_matrix(QQ, 1,ncols(bergmanConeRayMatrix)))
+        # println("Oscar.dim(intersect(jensenTrail, polyhedron(chainOfFlatsCone))): $(Oscar.dim(intersect(jensenTrail, polyhedron(chainOfFlatsCone))))")
 
-    #     @assert false "The new flipped chains and the old flipped chains should be the same"
-    # end
+        @assert false "The new flipped chains and the old flipped chains should be the same"
+    end
 
 
     if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesBergman)>0
