@@ -405,6 +405,9 @@ function breaking_direction(maximalChainOfFlats::ChainOfFlats, nonmaximalChainOf
 end
 
 
+
+# Given a maximal chain of flats and a subchain thereof of colength 1,
+# return the star of the corresponding maximal Bergman cone around the facet of codimension 1
 function bergman_cone_star(maximalChainOfFlats::ChainOfFlats, nonmaximalChainOfFlats::ChainOfFlats)
     println("maximalChainOfFlats: ", maximalChainOfFlats)
     println("nonmaximalChainOfFlats: ", nonmaximalChainOfFlats)
@@ -426,4 +429,47 @@ function bergman_cone_star(maximalChainOfFlats::ChainOfFlats, nonmaximalChainOfF
 
 
     return positive_hull([extraRay],facetRays)
+end
+
+
+# Given a chain of flats, a subchain thereof, and a tiebreaking weight vector,
+# return true if the subchain together with the tiebreaking vector induces the maximal chain of flats.
+function induces_refinement(chain::ChainOfFlats, subchain::ChainOfFlats, tiebreaker::Vector)
+
+    # basic input sanity checks
+    @assert matroid(chain) == matroid(subchain) "The matroids of the chains of flats must be the same"
+    @assert length(flats(chain)) == length(flats(subchain))+1 "nonmaximalChainOfFlats must have colength 1"
+
+    # iterate over the reduced flats of the subchain, partition them further using the tiebreaker
+    # and verify that all resulting flats are contained in the chain
+    Finduced = empty_flat(matroid(chain))
+    for Fred in reduced_flats(subchain)
+
+        # partition Fred using the tiebreaker in the form of a Dict
+        FredPartition = Dict{eltype(tiebreaker), Vector{Int}}()
+        for i in Fred
+            if !haskey(FredPartition, tiebreaker[i])
+                FredPartition[tiebreaker[i]] = Int[]
+            end
+            push!(FredPartition[tiebreaker[i]], i)
+        end
+
+        # iterate over keys of the Dict in descending order,
+        # and add them to Finduced and check if it is in the chain
+        for key in sort(collect(keys(FredPartition)), rev=true)
+            Finduced = flat(matroid(chain),union(elements(Finduced), FredPartition[key]))
+            println("key: ", key)
+            println("FredPartition[key]: ", FredPartition[key])
+            println("Finduced: ", Finduced)
+            println("flats(chain): ", flats(chain))
+            println("Finduced in flats(chain): ", Finduced in flats(chain))
+            if !(Finduced in flats(chain))
+                # induced flat not in chain
+                return false
+            end
+        end
+    end
+
+    # all induced flats were in the chain
+    return true
 end
