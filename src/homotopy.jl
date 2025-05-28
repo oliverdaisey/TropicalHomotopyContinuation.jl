@@ -178,9 +178,6 @@ function stable_intersection(T::Tracker) # ::Vector{TropicalPoint}
     @vprintln :TropicalHomotopies "$(T.logger)"
     @vprintln :TropicalHomotopies mixed_cells(T)
 
-    # do not consider multiplicities for now
-    return [first(tropical_intersection_point_and_drift(T, σ)) for σ in mixed_cells(T)]
-
     mults = multiplicity.(mixed_cells(T))
     pts = [first(tropical_intersection_point_and_drift(T, σ)) for σ in mixed_cells(T)]
 
