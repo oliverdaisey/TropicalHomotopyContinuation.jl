@@ -6,11 +6,12 @@ A mixed support is a collection of supports. This can represent either ambient s
 mutable struct MixedSupport
 
     supports::Tuple{Vararg{Support}} # collection of supports
+    pointMap::Dict{Point, Support} # map from points to their supports, used for quick access
 
 end
 
 function mixed_support(S::Tuple{Vararg{Support}})::MixedSupport
-    return MixedSupport(S)
+    return MixedSupport(S, Dict{Point, Support}())
 end
 
 function mixed_support(S::Vector{Support})::MixedSupport
@@ -98,13 +99,19 @@ function mixed_support(ambientSupport::MixedSupport, oldSupport::Support, newSup
 end
 
 function Base.getindex(Δ::MixedSupport, p::Point)
+    if haskey(Δ.pointMap, p)
+        return Δ.pointMap[p][p] # this means we don't have to search through the supports
+    end
     index = findfirst(s -> in(p, s), supports(Δ))
     if isnothing(index)
         return Nemo.PosInf()
+    else
+        # update the pointMap
+        Δ.pointMap[p] = supports(Δ)[index]
+        memberSupport = supports(Δ)[index]
+        @assert !isnothing(memberSupport) "The point $p is not in the mixed support"
+        return memberSupport[p]
     end
-    memberSupport = supports(Δ)[findfirst(s -> in(p, s), supports(Δ))]
-    @assert !isnothing(memberSupport) "The point $p is not in the mixed support"
-    return memberSupport[p]
 end
 
 function Base.:-(a::MixedSupport, b::MixedSupport)::MixedSupport
