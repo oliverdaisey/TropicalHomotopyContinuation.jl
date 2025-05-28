@@ -470,7 +470,6 @@ function update_cached_times!(T::Tracker, newMixedCells::Vector{MixedCell}, smal
         end
     end
 
-    # check_cached_times(T)
 end
 
 function show_heights(T::Tracker)
