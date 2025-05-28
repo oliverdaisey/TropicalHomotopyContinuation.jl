@@ -170,7 +170,7 @@ function random_lift(nu::TropicalSemiringMap, a::TropicalSemiringElem=tropical_s
     aInt = ZZ(a; preserve_ordering=true)
     randomLift = rand(-999:999)*Oscar.uniformizer_field(nu)^aInt
     while iszero(randomLift)
-        randomLift = rand(-999:999)*functionField(uniformizer(nu))^a
+        randomLift = rand(-999:999)*Oscar.uniformizer_field(nu)^aInt
     end
     return randomLift
 

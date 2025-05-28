@@ -118,7 +118,7 @@ function direction(T::Tracker)
     dir = first(targets(T)) - ambient_support(T)
     if any(isinf.(heights(dir)))
         # every height should be either infinity or 0
-        @assert all(h -> h == 0 || isinf(h), heights(dir)) "Invalid direction for tracker"
+        @assert all(h -> h == 0 || isinf(h), heights(dir)) "Invalid direction for tracker (the direction is $(supports(dir)))"
         for p in points(dir)
             if isinf(dir[p])
                 update_height!(dir, p, QQ(1))
@@ -130,6 +130,10 @@ function direction(T::Tracker)
 end
 
 function Base.:-(::Nemo.PosInf, ::Nemo.QQFieldElem)
+    return Nemo.PosInf()
+end
+
+function Base.:+(::Nemo.PosInf, ::Nemo.PosInf)
     return Nemo.PosInf()
 end
 

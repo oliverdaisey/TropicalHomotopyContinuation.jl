@@ -27,6 +27,7 @@ include("bergman_flip.jl")
 include("homotopy.jl")
 include("starting_system.jl")
 include("exports.jl")
+include("interface.jl")
 
 function __init__()
     # scope for overall homotopies
