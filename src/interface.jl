@@ -19,7 +19,6 @@ Computes the mixed support associated to a vector of polynomials `v`.
 """
 function compute_mixed_support(v::Vector)
     R = parent(first(v))
-    x = gens(R)
 
     supports = Support[]
     for f in v
