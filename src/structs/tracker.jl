@@ -55,7 +55,7 @@ end
 function perturb!(T::Tracker, timeOfFailure::Height)
 
     @assert !isinf(timeOfFailure) "Time of failure should be finite"
-    @vprintln :TropicalHomotopiesPerturb "time of failure = $(timeOfFailure)"
+    @vprintln :TropicalHomotopyContinuationPerturb "time of failure = $(timeOfFailure)"
     dir = direction(T)
     add_heights!(T, (timeOfFailure / 2)*dir)
     # choose a random point in height space
@@ -89,16 +89,16 @@ function perturb!(T::Tracker, timeOfFailure::Height)
     smallestTBergman = minimum([value for (key, value) in bergmanTimes])
     smallestTJensen = minimum([value for (key, value) in jensenTimes])
     smallestT = min(smallestTBergman, smallestTJensen) # the time at which we perform flips
-    @vprintln :TropicalHomotopiesPerturb "smallestT = $(smallestT)"
-    @vprintln :TropicalHomotopiesPerturb "smallestTBergman = $(smallestTBergman)"
-    @vprintln :TropicalHomotopiesPerturb "smallestTJensen = $(smallestTJensen)"
+    @vprintln :TropicalHomotopyContinuationPerturb "smallestT = $(smallestT)"
+    @vprintln :TropicalHomotopyContinuationPerturb "smallestTBergman = $(smallestTBergman)"
+    @vprintln :TropicalHomotopyContinuationPerturb "smallestTJensen = $(smallestTJensen)"
 
     dir = direction(newTracker)
-    @v_do :TropicalHomotopiesPerturb show_heights(T)
-    @vprintln :TropicalHomotopiesPerturb "Showing heights in direction between heights after first rebase and targetMixedSupport"
-    @v_do :TropicalHomotopiesPerturb show_heights(dir)
+    @v_do :TropicalHomotopyContinuationPerturb show_heights(T)
+    @vprintln :TropicalHomotopyContinuationPerturb "Showing heights in direction between heights after first rebase and targetMixedSupport"
+    @v_do :TropicalHomotopyContinuationPerturb show_heights(dir)
     add_heights!(T, (smallestT/2)*dir)
-    @v_do :TropicalHomotopiesPerturb show_heights(T)
+    @v_do :TropicalHomotopyContinuationPerturb show_heights(T)
     add_heights!(first(targets(T)), (smallestT/2)*dir)
 
     # delete all cached times

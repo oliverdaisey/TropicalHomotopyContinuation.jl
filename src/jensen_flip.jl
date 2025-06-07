@@ -7,7 +7,7 @@ function compute_jensen_time(T::Tracker, σ::MixedCell; disable_cache::Bool = fa
 
     hypersurfaceDuals = transform_linear_support(chain_of_flats(σ))
 
-    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesJensen)>0
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopyContinuationJensen)>0
         @assert is_subset(active_support(σ), ambient_support(T)) "The active support of the mixed cell is not a subset of the ambient support."
     end
     δ = combine(active_support(σ), hypersurfaceDuals)
@@ -15,7 +15,7 @@ function compute_jensen_time(T::Tracker, σ::MixedCell; disable_cache::Bool = fa
 
     C = mixed_cell_cone(δ, Δ)
 
-    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesJensen)>0
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopyContinuationJensen)>0
         @assert Δ in C "The mixed cell being tracked is not in the mixed cell cone."
     end
 
@@ -56,7 +56,7 @@ function jensen_flip(T::Tracker, σ::MixedCell, tJensen::Height)
     end
 
     κ = facets(C)[findfirst(κ -> dot(v, κ) * tJensen == -dot(Δ, κ), facets(C))]
-    @vprintln :TropicalHomotopiesJensen "The facet inequality broken is given by $(κ)"
+    @vprintln :TropicalHomotopyContinuationJensen "The facet inequality broken is given by $(κ)"
     p = extra_point(κ)
     changingSupport = supports(Δ)[findfirst(p in points(S) for S in supports(Δ))]
     # work out which mixed cell support this corresponds to (which active support)
@@ -69,13 +69,13 @@ function jensen_flip(T::Tracker, σ::MixedCell, tJensen::Height)
 
     for q in points(changingDualCell)
         if κ[q] > 0
-            @vprintln :TropicalHomotopiesJensen "Adding mixed cell with $q in support and $p not in support"
+            @vprintln :TropicalHomotopyContinuationJensen "Adding mixed cell with $q in support and $p not in support"
             # return mixed cell with p in support and q not in support
             push!(newMixedCells, swap(σ, q, p))
         end
     end
 
-    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesJensen)>0
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopyContinuationJensen)>0
         for σ in newMixedCells
             # check that the matrix coming from σ is invertible
             @assert is_transverse(σ) "$(σ) is not transverse"

@@ -440,7 +440,7 @@ function induces_refinement(chain::ChainOfFlats, subchain::ChainOfFlats, tiebrea
     @assert matroid(chain) == matroid(subchain) "The matroids of the chains of flats must be the same"
     @assert length(flats(chain)) == length(flats(subchain))+1 "nonmaximalChainOfFlats must have colength 1"
 
-    setsInChain = TropicalHomotopies.elements.(full_flats(chain))
+    setsInChain = TropicalHomotopyContinuation.elements.(full_flats(chain))
 
     # iterate over the reduced flats of the subchain, partition them further using the tiebreaker
     # and verify that all resulting flats are contained in the chain

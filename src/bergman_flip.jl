@@ -11,7 +11,7 @@ function compute_bergman_time(T::Tracker, σ::MixedCell; disable_cache::Bool = f
     w, u = tropical_intersection_point_and_drift(T, σ)
     inequalities, equalities = cone(chainOfFlats)
 
-    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesBergman)>0
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopyContinuationBergman)>0
         # check that we are inside the cone
         if length(equalities) > 0
             @assert all([sum(w .* v) == 0 for v in equalities]) "The intersection point is not in the cone (equality violated)"
@@ -21,7 +21,7 @@ function compute_bergman_time(T::Tracker, σ::MixedCell; disable_cache::Bool = f
         end
     end
 
-    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesBergman)>1
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopyContinuationBergman)>1
         @assert u in cone_from_equations(linear_equation_matrix(linear_span(C))) "The drift is not in the cone"
     end
 
@@ -69,7 +69,7 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
     # Compute the unrefined chain at the point of the Bergman flip
     startingChain = chain_of_flats(σ)
     unrefinedChain = chain_of_flats(matroid(startingChain), w + tBergman * u)
-    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesBergman)>0
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopyContinuationBergman)>0
         # check that the unrefined chain is indeed non-maximal
         # if violated, then input tBergman does not match computed w and u
         @assert length(unrefinedChain) < length(startingChain) "The unrefined chain is maximal"
@@ -231,7 +231,7 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
     # end
 
 
-    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesBergman)>0
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopyContinuationBergman)>0
         # check that the mixed cell data is valid
         newMixedCells = mixed_cell.(Ref(active_support(σ)), flippedChains)
         for σ in newMixedCells
@@ -286,7 +286,7 @@ end
 Compute the oblique projection matrix from the subspace spanned by the columns of `A` onto the subspace spanned by the columns of `B`.
 """
 function oblique_projection_matrix(A, B)
-    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesBergman)>0
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopyContinuationBergman)>0
         @assert Oscar.rank(B) == ncols(B) "Matrix B is not full rank"
         @assert Oscar.rank(A) == ncols(A) "Matrix A is not full rank"
     end

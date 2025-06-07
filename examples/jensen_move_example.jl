@@ -1,4 +1,4 @@
-using TropicalHomotopies
+using TropicalHomotopyContinuation
 
 p1 = point(0, 0)
 p2 = point(1, 0)

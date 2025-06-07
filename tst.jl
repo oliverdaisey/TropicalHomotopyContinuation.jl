@@ -1,4 +1,4 @@
 using Revise
 using Oscar
-using TropicalHomotopies
+using TropicalHomotopyContinuation
 include("examples/rigidity_theory_example.jl")
