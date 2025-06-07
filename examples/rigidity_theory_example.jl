@@ -1,4 +1,4 @@
-using TropicalHomotopies
+using TropicalHomotopyContinuation
 using Oscar
 
 # define matrix encoding linear ideal
@@ -15,18 +15,19 @@ M = matroid(linearMatrix)
 Oscar.randseed!(143)
 targetSupports = Support[]
 for i in [1,2,3,4,5]
-        pi = TropicalHomotopies.point([n in [i,i+5] ? 1 : 0 for n in 1:10])
-        p0 = TropicalHomotopies.point([0 for n in 1:10])
-            push!(targetSupports, TropicalHomotopies.support([pi,p0],[0,0]))
+        pi = TropicalHomotopyContinuation.point([n in [i,i+5] ? 1 : 0 for n in 1:10])
+        p0 = TropicalHomotopyContinuation.point([0 for n in 1:10])
+            push!(targetSupports, TropicalHomotopyContinuation.support([pi,p0],[0,0]))
 end
 # add an extra hypersurface to cut the common lineality space
-push!(targetSupports, TropicalHomotopies.support([TropicalHomotopies.point([1,0,0,0,0,0,0,0,0,0]),TropicalHomotopies.point([0,0,0,0,0,0,0,0,0,0])],[1,3]))
+push!(targetSupports, TropicalHomotopyContinuation.support([TropicalHomotopyContinuation.point([1,0,0,0,0,0,0,0,0,0]),TropicalHomotopyContinuation.point([0,0,0,0,0,0,0,0,0,0])],[1,3]))
 
 # define the target support
 targetSupport = mixed_support(targetSupports)
+
 Δ, σ = starting_data(targetSupport, M)
 T = tracker(Δ, targetSupport, [σ], path=:coefficient_wise)
 
 # compute the stable intersection
-AbstractAlgebra.set_verbosity_level(:TropicalHomotopies, 0)
-@time TropicalHomotopies.stable_intersection(T)
+AbstractAlgebra.set_verbosity_level(:TropicalHomotopyContinuation, 0)
+@time TropicalHomotopyContinuation.stable_intersection(T)

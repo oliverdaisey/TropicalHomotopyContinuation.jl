@@ -1,4 +1,4 @@
-module TropicalHomotopies
+module TropicalHomotopyContinuation
 
 using Oscar
 
@@ -31,28 +31,28 @@ include("interface.jl")
 
 function __init__()
     # scope for overall homotopies
-    add_verbosity_scope(:TropicalHomotopies)
-    add_assertion_scope(:TropicalHomotopies)
+    add_verbosity_scope(:TropicalHomotopyContinuation)
+    add_assertion_scope(:TropicalHomotopyContinuation)
 
     # scope for starting data
-    add_verbosity_scope(:TropicalHomotopiesStart)
-    add_assertion_scope(:TropicalHomotopiesStart)
+    add_verbosity_scope(:TropicalHomotopyContinuationStart)
+    add_assertion_scope(:TropicalHomotopyContinuationStart)
 
     # scope for the general move
-    add_verbosity_scope(:TropicalHomotopiesMove)
-    add_assertion_scope(:TropicalHomotopiesMove)
+    add_verbosity_scope(:TropicalHomotopyContinuationMove)
+    add_assertion_scope(:TropicalHomotopyContinuationMove)
 
     # scope for Bergman related functions (time and move)
-    add_verbosity_scope(:TropicalHomotopiesBergman)
-    add_assertion_scope(:TropicalHomotopiesBergman)
+    add_verbosity_scope(:TropicalHomotopyContinuationBergman)
+    add_assertion_scope(:TropicalHomotopyContinuationBergman)
 
     # scope for Jensen related functions (time and move)
-    add_verbosity_scope(:TropicalHomotopiesJensen)
-    add_assertion_scope(:TropicalHomotopiesJensen)
+    add_verbosity_scope(:TropicalHomotopyContinuationJensen)
+    add_assertion_scope(:TropicalHomotopyContinuationJensen)
 
     # scope for perturbation
-    add_verbosity_scope(:TropicalHomotopiesPerturb)
-    add_assertion_scope(:TropicalHomotopiesPerturb)
+    add_verbosity_scope(:TropicalHomotopyContinuationPerturb)
+    add_assertion_scope(:TropicalHomotopyContinuationPerturb)
 end
 
 end

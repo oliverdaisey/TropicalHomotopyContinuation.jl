@@ -9,7 +9,7 @@ function stable_intersection(S::MixedSupport, M::RealisableMatroid)
     Δ, σ = starting_data(S, M)
     T = tracker(Δ, S, [σ], path=:coefficient_wise)
 
-    return TropicalHomotopies.stable_intersection(T)
+    return TropicalHomotopyContinuation.stable_intersection(T)
 end
 
 """

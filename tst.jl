@@ -1,13 +1,13 @@
 using Revise
 using Oscar
-using TropicalHomotopies
+using TropicalHomotopyContinuation
 include("examples/rigidity_theory_example.jl")
 
 
 M = matrix(QQ,[1 0 1; 0 1 1])
 Mmat = matroid(RealisableMatroid(M,2))
-F = TropicalHomotopies.flat(Mmat, Set{Int}([1]))
-G = TropicalHomotopies.flat(matroid(RealisableMatroid(M,2)), Set{Int}([1]))
+F = TropicalHomotopyContinuation.flat(Mmat, Set{Int}([1]))
+G = TropicalHomotopyContinuation.flat(matroid(RealisableMatroid(M,2)), Set{Int}([1]))
 G in [F]
 
 
