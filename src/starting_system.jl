@@ -7,8 +7,8 @@ Returns a tuple (Δ, Δ', σ) with Δ a mixed support, Δ' the t arget, and σ t
 """
 function starting_data(targetΔ::MixedSupport, M::RealisableMatroid)
 
-    @vprintln :TropicalHomotopiesStart "Computing starting data for tropical homotopies"
-    @vprintln :TropicalHomotopiesStart "Target mixed support: $(dump_info(targetΔ))"
+    @vprintln :TropicalHomotopyContinuationStart "Computing starting data for tropical homotopies"
+    @vprintln :TropicalHomotopyContinuationStart "Target mixed support: $(dump_info(targetΔ))"
 
     startingPolynomials = TropicalPolynomial[]
     TT = tropical_semiring()
@@ -18,35 +18,35 @@ function starting_data(targetΔ::MixedSupport, M::RealisableMatroid)
     degrees = []
     for S in supports(targetΔ)
 
-        @vprintln :TropicalHomotopiesStart "Computing starting polynomial for point support $(S)"
+        @vprintln :TropicalHomotopyContinuationStart "Computing starting polynomial for point support $(S)"
         pts = points(S)
         ambientDim = length(first(pts))
         d = Int(ceil(max([norm(entries(p)) for p in pts]...)))
         push!(degrees, d)
-        @vprintln :TropicalHomotopiesStart "Degree d = $d"
+        @vprintln :TropicalHomotopyContinuationStart "Degree d = $d"
 
         simplexVertices = Vector{Int}[]
         for j in 1:ambientDim
-            @vprintln :TropicalHomotopiesStart "Checking if $j-th simplex vertex is needed"
+            @vprintln :TropicalHomotopyContinuationStart "Checking if $j-th simplex vertex is needed"
             if any([p[j] != 0 for p in pts])
-                @vprintln :TropicalHomotopiesStart "Adding $j-th simplex vertex $([j == i ? 1 : 0 for i in 1:ambientDim])"
+                @vprintln :TropicalHomotopyContinuationStart "Adding $j-th simplex vertex $([j == i ? 1 : 0 for i in 1:ambientDim])"
                 push!(simplexVertices, [i == j ? 1 : 0 for i in 1:ambientDim])
             else
-                @vprintln :TropicalHomotopiesStart "Simplex vertex $j is not needed"
+                @vprintln :TropicalHomotopyContinuationStart "Simplex vertex $j is not needed"
             end
         end
 
         # work out whether to add 0 or not
-        @vprintln :TropicalHomotopiesStart "Checking if origin is needed"
+        @vprintln :TropicalHomotopyContinuationStart "Checking if origin is needed"
         if any(norm(p) != d for p in entries.(pts))
-            @vprintln :TropicalHomotopiesStart "Adding origin"
+            @vprintln :TropicalHomotopyContinuationStart "Adding origin"
             push!(simplexVertices, [0 for i in 1:ambientDim])
         else
-            @vprintln :TropicalHomotopiesStart "Origin is not needed"
+            @vprintln :TropicalHomotopyContinuationStart "Origin is not needed"
         end
 
         # create a tropical linear polynomial using the simplexVertices as exponent vectors
-        @vprintln :TropicalHomotopiesStart "Creating tropical linear polynomial"
+        @vprintln :TropicalHomotopyContinuationStart "Creating tropical linear polynomial"
         f = 0
         for exponentVector in simplexVertices
             monomial = 1
@@ -56,17 +56,17 @@ function starting_data(targetΔ::MixedSupport, M::RealisableMatroid)
             # make sure that the vertices of the simplex are lifted lower than everything inside targetΔ
             f += TT(QQ(min([targetΔ[p] for p in points(targetΔ)]...)) - QQ(rand(33:1000)))*monomial
         end
-        @vprintln :TropicalHomotopiesStart "Starting polynomial: $f"
+        @vprintln :TropicalHomotopyContinuationStart "Starting polynomial: $f"
         push!(startingPolynomials, f)
 
     end
 
-    @vprintln :TropicalHomotopiesStart "Finished computing all starting polynomials"
-    @vprintln :TropicalHomotopiesStart "Finding the tropical point corresponding to system $(startingPolynomials) with the linear equation matrix $(matrix(M))"
+    @vprintln :TropicalHomotopyContinuationStart "Finished computing all starting polynomials"
+    @vprintln :TropicalHomotopyContinuationStart "Finding the tropical point corresponding to system $(startingPolynomials) with the linear equation matrix $(matrix(M))"
     w = find_tropical_point(startingPolynomials, M)
-    @vprintln :TropicalHomotopiesStart "Found tropical point: $w"
+    @vprintln :TropicalHomotopyContinuationStart "Found tropical point: $w"
     C = chain_of_flats(M, QQ.(w))
-    @vprintln :TropicalHomotopiesStart "Chain of flats: $C"
+    @vprintln :TropicalHomotopyContinuationStart "Chain of flats: $C"
     startingSupports = support.(startingPolynomials)
     # scale the entries of all the startingSupports by the degrees
     for (i, S) in enumerate(startingSupports)
@@ -79,38 +79,38 @@ function starting_data(targetΔ::MixedSupport, M::RealisableMatroid)
         end
         startingSupports[i] = support(newPoints, newHeights)
     end
-    @vprintln :TropicalHomotopiesStart "Active starting support: $(startingSupports)"
+    @vprintln :TropicalHomotopyContinuationStart "Active starting support: $(startingSupports)"
     # work out the active support for the mixed cell
     # by construction it will be monomials in startingSupports
 
-    @vprintln :TropicalHomotopiesStart "Computing active support for mixed cell"
+    @vprintln :TropicalHomotopyContinuationStart "Computing active support for mixed cell"
     activeSupport = Support[]
     for S in startingSupports
         @assert length(minimum_monomials(S, QQ.(w))) == 2 "Not a valid starting support"
         push!(activeSupport, support(minimum_monomials(S,QQ.(w)), [0 for i in 1:length(minimum_monomials(S, QQ.(w)))]))
-        @vprintln :TropicalHomotopiesStart "Active support of mixed cell: $(activeSupport[end])"
+        @vprintln :TropicalHomotopyContinuationStart "Active support of mixed cell: $(activeSupport[end])"
     end
 
     # create a mixed cell from the active support
-    @vprintln :TropicalHomotopiesStart "Creating mixed cell from active support"
+    @vprintln :TropicalHomotopyContinuationStart "Creating mixed cell from active support"
     σ = mixed_cell(mixed_support(tuple(activeSupport...)), C)
-    @vprintln :TropicalHomotopiesStart "Mixed cell: $σ"
+    @vprintln :TropicalHomotopyContinuationStart "Mixed cell: $σ"
     # merge targetΔ into startingSupports
-    @vprintln :TropicalHomotopiesStart "Merging target support into active starting support"
+    @vprintln :TropicalHomotopyContinuationStart "Merging target support into active starting support"
     for (i,S) in enumerate(startingSupports)
-        @vprintln :TropicalHomotopiesStart "Merging starting $(S)_$(i) with target support $(supports(targetΔ)[i])"
+        @vprintln :TropicalHomotopyContinuationStart "Merging starting $(S)_$(i) with target support $(supports(targetΔ)[i])"
         startingSupports[i] = merge(S, supports(targetΔ)[i])
-        @vprintln :TropicalHomotopiesStart "Merged support: $(startingSupports[i])"
+        @vprintln :TropicalHomotopyContinuationStart "Merged support: $(startingSupports[i])"
     end
 
-    @vprintln :TropicalHomotopiesStart "Creating mixed support from merged supports"
+    @vprintln :TropicalHomotopyContinuationStart "Creating mixed support from merged supports"
     Δ = mixed_support(tuple(startingSupports...))
 
-    @vprintln :TropicalHomotopiesStart "Mixed support: $(dump_info(Δ))"
+    @vprintln :TropicalHomotopyContinuationStart "Mixed support: $(dump_info(Δ))"
 
-    @vprintln :TropicalHomotopiesStart "Finished computing starting data"
+    @vprintln :TropicalHomotopyContinuationStart "Finished computing starting data"
 
-    if AbstractAlgebra.get_assertion_level(:TropicalHomotopiesStart) > 0
+    if AbstractAlgebra.get_assertion_level(:TropicalHomotopyContinuationStart) > 0
         @assert is_subset(active_support(σ), Δ) "The active support of the mixed cell is not a subset of the mixed support."
         @assert is_transverse(σ) "The mixed cell is not transverse."
         @assert are_support_heights_finite(Δ, σ) "$(σ) has invalid mixed height data"
@@ -155,9 +155,9 @@ function find_tropical_point(polynomials::Vector{TropicalPolynomial}, M::Realisa
     end
 
     try
-        @vprintln :TropicalHomotopiesStart "Solving system of equations with number of variables $(ncols(equationsMatrix)) and number of equations $(nrows(equationsMatrix))"
+        @vprintln :TropicalHomotopyContinuationStart "Solving system of equations with number of variables $(ncols(equationsMatrix)) and number of equations $(nrows(equationsMatrix))"
         w = Oscar.solve(equationsMatrix, b, side = :right)
-        @vprintln :TropicalHomotopiesStart "Found solution $(w)"
+        @vprintln :TropicalHomotopyContinuationStart "Found solution $(w)"
         return ν.(w)
     catch
         return nothing
