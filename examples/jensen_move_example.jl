@@ -29,7 +29,7 @@ M = matroid(Oscar.matrix(QQ, [1 0; 0 1]))
 display(chain_of_flats(σ))
 
 T = tracker(Δ, targetSupport, [σ])
-# display(stable_intersection(T))
+# display(track!(T))
 # pt, drift = tropical_intersection_point_and_drift(T, σ)
 
 # println("intersection point = ", pt)

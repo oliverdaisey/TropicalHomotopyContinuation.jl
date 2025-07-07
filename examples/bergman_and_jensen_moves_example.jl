@@ -40,7 +40,7 @@ candidateTwo = mixed_cell(mixed_support((f1, f2Active)), chainOfFlats)
 # check that the intersection points are correct
 T = tracker(mixedSupport, targetSupport, [candidateOne, candidateTwo], path=:straight_line)
 
-@time display(stable_intersection(T))
+@time display(track!(T))
 
 # println("candidate one")
 # w, u = tropical_intersection_point_and_drift(T, candidateOne)

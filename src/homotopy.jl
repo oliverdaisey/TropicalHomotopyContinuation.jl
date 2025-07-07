@@ -166,11 +166,8 @@ function move!(T::Tracker)
 
 end
 
-function tropical_homotopy_continuation(T::Tracker)
-    while move!(T) end
-end
 
-function stable_intersection(T::Tracker) # ::Vector{TropicalPoint}
+function track!(T::Tracker)
     while move!(T)
     @vprintln :TropicalHomotopies "$(T.logger)"
     @vprintln :TropicalHomotopies "$(length(mixed_cells(T))) mixed cells being tracked"

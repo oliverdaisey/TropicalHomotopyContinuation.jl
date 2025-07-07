@@ -25,8 +25,9 @@ push!(targetSupports, TropicalHomotopies.support([TropicalHomotopies.point([1,0,
 # define the target support
 targetSupport = mixed_support(targetSupports)
 Δ, σ = starting_data(targetSupport, M)
-T = tracker(Δ, targetSupport, [σ], path=:coefficient_wise)
+# T = tracker(Δ, targetSupport, [σ], path=:coefficient_wise)
+T = tracker(Δ, targetSupport, [σ], path=:straight_line)
 
 # compute the stable intersection
 AbstractAlgebra.set_verbosity_level(:TropicalHomotopies, 0)
-@time TropicalHomotopies.stable_intersection(T)
+@time track!(T)

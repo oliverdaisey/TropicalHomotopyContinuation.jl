@@ -48,13 +48,13 @@ export point
 export points
 export rank
 export RealisableMatroid
-export stable_intersection
 export starting_data
 export Support
 export support
 export supports
 export swap
 export targets
+export track!
 export Tracker
 export tracker
 export tropical_homotopy_continuation

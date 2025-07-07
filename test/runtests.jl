@@ -35,7 +35,7 @@ using Test
         Δ, σ = starting_data(targetSupport, M)
         T = tracker(Δ, targetSupport, [σ], path=:straight_line)
 
-        Sigma = stable_intersection(T)
+        Sigma = track!(T)
         @test sum(Sigma[2]) == 4
     end
 
