@@ -6,8 +6,7 @@ using Oscar
 import Oscar:
     dot,
     flats,
-    matrix,
-    stable_intersection
+    matrix
 
 include("structs/point.jl")
 include("structs/height.jl")
