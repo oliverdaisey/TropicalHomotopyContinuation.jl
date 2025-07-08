@@ -31,7 +31,6 @@ function Base.length(Δ::MixedSupport)
 end
 
 function Base.show(io::IO, Δ::MixedSupport)
-
     print(io, "Mixed support involving $(length(supports(Δ))) point supports")
 end
 
@@ -147,4 +146,13 @@ function dump_info(Δ::MixedSupport)
     end
 
     return returnString
+end
+
+
+###
+# Constructors
+###
+
+function mixed_support(F::Vector{AbstractAlgebra.Generic.MPoly{TropicalSemiringElem{typeof(min)}}})
+    return mixed_support([support(f) for f in F])
 end

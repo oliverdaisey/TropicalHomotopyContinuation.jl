@@ -166,3 +166,11 @@ Returns the monomials `m` in the support `S` where the minimum of $ m \cdot w + 
 function minimum_monomials(S::Support, w::TropicalPoint)
     return [m for m in points(S) if all(dot(w, m) + S[m] <= dot(w, p) + S[p] for p in points(S))]
 end
+
+
+###
+# Constructors
+###
+function support(f::AbstractAlgebra.Generic.MPoly{TropicalSemiringElem{typeof(min)}})
+    return TropicalHomotopyContinuation.support(TropicalHomotopyContinuation.point.(exponents(f)), QQ.(coefficients(f)))
+end
