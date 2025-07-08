@@ -1,34 +1,39 @@
 using TropicalHomotopyContinuation
 using Oscar
 
-# define matrix encoding linear ideal
-linearMatrix = matrix(QQ, [1 1 0 0 0 0 0 0 0 0; -1 0 -1 -1 0 0 0 0 0 0; 0 -1 1 0 -1 0 0 0 0 0; 0 0 0 1 1 0 0 0 0 0; 0 0 0 0 0 1 1 0 0 0; 0 0 0 0 0 -1 0 -1 -1 0; 0 0 0 0 0 0 -1 1 0 -1; 0 0 0 0 0 0 0 0 1 1])
-
-# reduce linearMatrix to row echelon form
+# specify the Bergman fan in the form of a realisation matrix
+# for realisation numbers of minimally rigid graphs,
+# it consists of two copies of the vertex-edge matrix
+linearMatrix = matrix(QQ, [ 1  1  0  0  0  0  0  0  0  0;
+                           -1  0 -1 -1  0  0  0  0  0  0;
+                            0 -1  1  0 -1  0  0  0  0  0;
+                            0  0  0  1  1  0  0  0  0  0;
+                            0  0  0  0  0  1  1  0  0  0;
+                            0  0  0  0  0 -1  0 -1 -1  0;
+                            0  0  0  0  0  0 -1  1  0 -1;
+                            0  0  0  0  0  0  0  0  1  1])
 linearMatrix = echelon_form(linearMatrix, trim=true)
-R, (x1,x2,x3,x4,x5,x6,x7,x8,x9,x10) = polynomial_ring(QQ, 10)
-M = matroid(linearMatrix)
+M = matroid(linearMatrix) # column matroid
 
-# define hypersurface supports
-# Oscar.randseed!(31415296) # seed to reproduce bug (2 mixed cells)
-# Oscar.randseed!(127) # 3 mixed cells at the end
-Oscar.randseed!(143)
-targetSupports = Support[]
-for i in [1,2,3,4,5]
-        pi = TropicalHomotopyContinuation.point([n in [i,i+5] ? 1 : 0 for n in 1:10])
-        p0 = TropicalHomotopyContinuation.point([0 for n in 1:10])
-            push!(targetSupports, TropicalHomotopyContinuation.support([pi,p0],[0,0]))
-end
-# add an extra hypersurface to cut the common lineality space
-push!(targetSupports, TropicalHomotopyContinuation.support([TropicalHomotopyContinuation.point([1,0,0,0,0,0,0,0,0,0]),TropicalHomotopyContinuation.point([0,0,0,0,0,0,0,0,0,0])],[1,3]))
 
-# define the target support
-targetSupport = mixed_support(targetSupports)
+# specify the target hypersurfaces in the form of tropical polynomials
+# for realisation numbers, these are xi*yi+0 and x1+0 to cut away lineality
+T = tropical_semiring()
+Txy,x,y = polynomial_ring(T, "x"=>1:5, "y"=>1:5)
+F = vcat([xi*yi+0 for (xi, yi) in zip(x, y)],[x[1]+0])
+targetSupport = mixed_support(F)
 
-Δ, σ = starting_data(targetSupport, M)
-# T = tracker(Δ, targetSupport, [σ], path=:coefficient_wise)
-T = tracker(Δ, targetSupport, [σ], path=:straight_line)
 
-# compute the stable intersection
-AbstractAlgebra.set_verbosity_level(:TropicalHomotopyContinuation, 0)
+# construct the starting mixed support and the starting mixed cells
+startingSupport, startingCell = starting_data(targetSupport, M)
+
+
+# construct the tracker from the starting mixed support to the target mixed support
+# possible paths are :coefficient_wise (fast, non-deterministic) and :straight_line (slow, deterministic)
+# T = tracker(startingSupport, targetSupport, [startingCell], path=:coefficient_wise)
+T = tracker(startingSupport, targetSupport, [startingCell], path=:straight_line)
+
+
+# Optional: set verbosity level
+AbstractAlgebra.set_verbosity_level(:TropicalHomotopyContinuation, 1)
 @time track!(T)
