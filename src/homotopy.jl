@@ -167,14 +167,27 @@ function move!(T::Tracker)
 end
 
 
+@doc raw"""
+    track!(T::Tracker)
+
+Move the tracker `T` until no more flips are necessary.
+"""
 function track!(T::Tracker)
     while move!(T)
-    @vprintln :TropicalHomotopyContinuation "$(T.logger)"
-    @vprintln :TropicalHomotopyContinuation "$(length(mixed_cells(T))) mixed cells being tracked"
+        @vprintln :TropicalHomotopyContinuation "$(T.logger)"
+        @vprintln :TropicalHomotopyContinuation "$(length(mixed_cells(T))) mixed cells being tracked"
     end
     @vprintln :TropicalHomotopyContinuation "$(T.logger)"
     @vprintln :TropicalHomotopyContinuation mixed_cells(T)
+end
 
+
+@doc raw"""
+    endgame(T::Tracker)
+
+Given a tracker `T` where no flips are necessary, return tropical intersection point and multiplicities of the target.
+"""
+function endgame(T::Tracker)
     mults = multiplicity.(mixed_cells(T))
     pts = [first(tropical_intersection_point_and_drift(T, σ)) for σ in mixed_cells(T)]
 

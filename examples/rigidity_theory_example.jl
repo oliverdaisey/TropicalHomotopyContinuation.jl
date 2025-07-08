@@ -34,6 +34,10 @@ startingSupport, startingCell = starting_data(targetSupport, M)
 T = tracker(startingSupport, targetSupport, [startingCell], path=:straight_line)
 
 
-# Optional: set verbosity level
+# Move tracker until reaching endgame
 AbstractAlgebra.set_verbosity_level(:TropicalHomotopyContinuation, 1)
 @time track!(T)
+
+
+# Perform endgame
+@time endgame(T)
