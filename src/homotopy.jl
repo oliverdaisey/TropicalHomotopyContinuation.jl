@@ -175,8 +175,6 @@ function track!(T::Tracker)
     @vprintln :TropicalHomotopyContinuation "$(T.logger)"
     @vprintln :TropicalHomotopyContinuation mixed_cells(T)
 
-    return [first(tropical_intersection_point_and_drift(T, σ)) for σ in mixed_cells(T)]
-
     mults = multiplicity.(mixed_cells(T))
     pts = [first(tropical_intersection_point_and_drift(T, σ)) for σ in mixed_cells(T)]
 
