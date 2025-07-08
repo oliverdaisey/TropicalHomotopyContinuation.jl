@@ -25,6 +25,7 @@ targetSupport = mixed_support(F)
 
 
 # construct the starting mixed support and the starting mixed cells
+Oscar.randseed!(143)
 startingSupport, startingCell = starting_data(targetSupport, M)
 
 
