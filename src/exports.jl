@@ -12,6 +12,7 @@ export colength
 export dim
 export direction
 export empty_flat
+export endgame
 export entries
 export extra_point
 export facets
