@@ -59,6 +59,10 @@ function Base.:-(a::Point, b::Point)::Point
     return Point(a.entries .- b.entries)
 end
 
+function Base.iterate(p::Point, state...)
+    return iterate(p.entries, state...)
+end
+
 @doc raw"""
     minkowski_sum(args...)
 
