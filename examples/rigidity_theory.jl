@@ -25,14 +25,14 @@ targetSupport = mixed_support(F)
 
 
 # construct the starting mixed support and the starting mixed cells
-Oscar.randseed!(143)
+Oscar.randseed!(13371337)
 startingSupport, startingCell = starting_data(targetSupport, M)
 
 
 # construct the tracker from the starting mixed support to the target mixed support
 # possible paths are :coefficient_wise (fast, non-deterministic) and :straight_line (slow, deterministic)
-# T = tracker(startingSupport, targetSupport, [startingCell], path=:coefficient_wise)
-T = tracker(startingSupport, targetSupport, [startingCell], path=:straight_line)
+T = tracker(startingSupport, targetSupport, [startingCell], path=:coefficient_wise)
+# T = tracker(startingSupport, targetSupport, [startingCell], path=:straight_line)
 
 
 # Move tracker until reaching endgame
@@ -42,3 +42,17 @@ AbstractAlgebra.set_verbosity_level(:TropicalHomotopyContinuation, 1)
 
 # Perform endgame
 @time endgame(T)
+
+
+
+#################################################################################
+#
+#  Comparison with naive stable intersection
+#
+#################################################################################
+
+@time begin
+    toIntersect = tropical_hypersurface.(F)
+    toIntersect = vcat(toIntersect, [tropical_linear_space(linearMatrix)])
+    reduce(stable_intersection,toIntersect)
+end
