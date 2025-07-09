@@ -148,20 +148,15 @@ function tropical_intersection_point_and_drift(T::Tracker, σ::MixedCell)::Union
     τ = direction(T)
     C = chain_of_flats(σ)
 
-    rows = Vector{Int}[]
+    rows = Vector{QQFieldElem}[]
     heights = QQFieldElem[]
     dir = QQFieldElem[]
 
-    # add in rows from chain of flats
-    pts = loopless_face(C)
-    p1 = first(pts)
-
-    for p in pts
-        if !is_equal(p1, p)
-            push!(rows, p1 - p)
-            push!(heights, 0)
-            push!(dir, 0)
-        end
+    M = tropical_equalities(C)
+    for i in 1:nrows(M)
+        push!(rows, M[i,:])
+        push!(heights, 0)
+        push!(dir, 0)
     end
 
     for S in supports(σ)
@@ -176,7 +171,7 @@ function tropical_intersection_point_and_drift(T::Tracker, σ::MixedCell)::Union
 
         for p in points(S)
             if !is_equal(p1, p) # && !isinf(Δ[p])
-                push!(rows, p1 - p)
+                push!(rows, QQ.(p1 - p))
                 push!(heights, Δ[p] - Δ[p1])
                 push!(dir, τ[p] - τ[p1])
             end
