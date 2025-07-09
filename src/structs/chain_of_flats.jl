@@ -470,3 +470,30 @@ function induces_refinement(chain::ChainOfFlats, subchain::ChainOfFlats, tiebrea
     # all induced flats were in the chain
     return true
 end
+
+
+@doc raw"""
+    tropical_equalities(C::ChainOfFlats)
+
+Return an inequality matrix of the span of the tropical polyhedron of `C`.
+"""
+function tropical_equalities(C::ChainOfFlats)
+    # Get the reduced flats of the chain of flats
+    reducedFlats = reduced_flats(C)
+
+    # Initialize the list of equalities
+    equalities = Vector{QQFieldElem}[]
+
+    # Iterate over the reduced flats
+    for F in reducedFlats
+        F1, Frest = Iterators.peel(F)
+        for Fj in Frest
+            equality = zeros(QQ, length(ground_set(matroid(C))))
+            equality[F1] = 1
+            equality[Fj] = -1
+            push!(equalities, equality)
+        end
+    end
+
+    return Oscar.matrix(QQ, equalities)
+end
