@@ -76,7 +76,7 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
     end
 
     # If unrefined chain has colength greater 1, we require a perturbation
-    if length(unrefinedChain) < + 1 != length(startingChain)
+    if length(unrefinedChain) + 1 < length(startingChain)
         return MixedCell[] # empty return signal need for perturbation
     end
 
