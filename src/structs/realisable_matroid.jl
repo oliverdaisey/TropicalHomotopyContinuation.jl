@@ -26,6 +26,15 @@ function matroid(M::RealisableMatroid)
     return matroid_from_matrix_columns(matrix(M))
 end
 
+@doc raw"""
+    base_field(M::RealisableMatroid)
+
+Return the field over which `M` is realised.
+"""
+function base_field(M::RealisableMatroid)
+    return base_ring(matrix(M))
+end
+
 function Base.show(io::IO, M::RealisableMatroid)
     print(io, "Realisable matroid of rank ", rank(M), " with ground set ", ground_set(M))
 end
