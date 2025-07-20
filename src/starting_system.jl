@@ -127,7 +127,8 @@ function find_tropical_point(polynomials::Vector{TropicalPolynomial}, M::Realisa
 
     @assert all(total_degree(polynomial) == 1 for polynomial in polynomials) "The polynomials must be linear."
 
-    R, t = rational_function_field(QQ, "t")
+    K = base_field(M)
+    R, t = rational_function_field(K, "t")
     S, _ = polynomial_ring(R, ngens(parent(first(polynomials))))
 
     ν = tropical_semiring_map(R, t)
@@ -141,7 +142,7 @@ function find_tropical_point(polynomials::Vector{TropicalPolynomial}, M::Realisa
 
     A = Oscar.matrix(R, rows)
     # for now, test whether this is working correctly so far
-    linearIdealMatrix = Oscar.matrix(QQ, transpose(Oscar.nullspace(matrix(M))[2]))
+    linearIdealMatrix = Oscar.matrix(K, transpose(Oscar.nullspace(matrix(M))[2]))
     equationsMatrix = vcat(R.(matrix(M)), A)
     equationsMatrix = vcat(R.(linearIdealMatrix), A)
 
@@ -170,7 +171,7 @@ function random_lift(nu::TropicalSemiringMap, a::TropicalSemiringElem=tropical_s
     aInt = ZZ(a; preserve_ordering=true)
     randomLift = rand(-999:999)*Oscar.uniformizer_field(nu)^aInt
     while iszero(randomLift)
-        randomLift = rand(-999:999)*functionField(uniformizer(nu))^a
+        randomLift = rand(-999:999)*Oscar.uniformizer_field(nu)^aInt
     end
     return randomLift
 
