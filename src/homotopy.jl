@@ -172,10 +172,18 @@ end
 
 Move the tracker `T` until no more flips are necessary.
 """
-function track!(T::Tracker)
+function track!(T::Tracker; abort_after_n_steps::Int = -1)
     while move!(T)
         @vprintln :TropicalHomotopyContinuation "$(T.logger)"
         @vprintln :TropicalHomotopyContinuation "$(length(mixed_cells(T))) mixed cells being tracked"
+
+        if abort_after_n_steps > 0
+            abort_after_n_steps -= 1
+            if abort_after_n_steps == 0
+                @vprintln :TropicalHomotopyContinuation "Aborting after $abort_after_n_steps steps."
+                return false
+            end
+        end
     end
     @vprintln :TropicalHomotopyContinuation "$(T.logger)"
     @vprintln :TropicalHomotopyContinuation mixed_cells(T)
