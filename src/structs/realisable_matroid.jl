@@ -86,7 +86,6 @@ end
 Return the rank of the realisable matroid `M` restricted to the set `b`.
 """
 function rank(M::RealisableMatroid, b::Set{Int})
-
     return Oscar.rank(matrix(M)[:, collect(b)])
 end
 
@@ -105,7 +104,6 @@ end
 Return `true` if `b` is a basis of the realisable matroid `M`.
 """
 function is_basis(M::RealisableMatroid, b::Set{Int})
-
     return length(b) == rank(M)
 end
 
