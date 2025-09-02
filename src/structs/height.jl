@@ -12,9 +12,10 @@ function Base.convert(::Type{Height}, w)::Height
     return QQ(w)
 end
 
-function Base.:+(α::Height, β::Height)::Height
-    if isinf(α) || isinf(β)
-        return PosInf()
-    end
-    return α + β
+# required but not defined in OSCAR
+function Base.:+(::QQFieldElem, ::PosInf)::PosInf
+    return PosInf()
+end
+function Base.:+(::PosInf, ::QQFieldElem)::PosInf
+    return PosInf()
 end

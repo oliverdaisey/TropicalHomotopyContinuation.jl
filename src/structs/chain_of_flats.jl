@@ -14,6 +14,12 @@ struct ChainOfFlats
     flats::Vector{Flat}
 end
 
+function Base.hash(c::ChainOfFlats, h::UInt)
+    # Combine hashes of matroid and flats
+    h = hash(c.matroid, h)  # hash the matroid
+    h = hash(c.flats, h)    # hash the vector of Flats
+    return h
+end
 
 
 ###############################################################################
@@ -154,7 +160,7 @@ end
 Return the colength of the chain of flats `C`, i.e., the rank of its matroid minus its length.
 """
 function colength(C::ChainOfFlats)
-    return length(C) - rank(matroid(C)) + 1
+    return rank(matroid(C)) - length(C) - 1
 end
 
 @doc raw"""
@@ -329,6 +335,62 @@ A refinement is a chain that contains the original chain as a subsequence.
 Maximal chains are those that cannot be refined any further.
 """
 function maximal_refinements(C::ChainOfFlats)::Vector{ChainOfFlats}
+    if colength(C)==0
+        return [C]
+    elseif colength(C)==1 && matroid(C) isa RealisableMatroid
+        return maximal_refinements_colength_one_realisable(C)
+    end
+    return maximal_refinements_general(C)
+end
+
+function maximal_refinements_colength_one_realisable(C::ChainOfFlats)::Vector{ChainOfFlats}
+
+    # Identify the rank gap in the chain (there should be exactly one)
+    full_chain = [empty_flat(matroid(C)); flats(C); ground_flat(matroid(C))]
+    F = Int[]
+    H = Int[]
+    r = rank(full_chain[1])
+    gapIndex = 1
+    for i in 2:length(full_chain)
+        rNext = rank(full_chain[i])
+        if rNext - r > 1
+            gapIndex = i-1
+            break
+        end
+        r = rNext
+    end
+    F = collect(elements(full_chain[gapIndex]))
+    H = collect(elements(full_chain[gapIndex+1]))
+
+    # Find subsets F ⊊ G ⊊ H with rank(F)+2==rank(G)+1==rank(H)
+    intermediateFlats = Flat[]
+    toCheck = setdiff(H, F)
+    M = matrix(matroid(C))
+    rF = Oscar.rank(M[:,F])
+    while !isempty(toCheck)
+        x,toCheckRest = Iterators.peel(toCheck)
+
+        # Start with G ∖ F = {x} and
+        # successively add y∈H∖G that do not raise rank beyond rF+1
+        GminusF = [x]
+        for y in toCheckRest
+            if Oscar.rank(M[:,vcat(F, GminusF, y)]) == rF+1
+                push!(GminusF, y)
+            end
+        end
+
+        # push G into intermediateFlats and delete GminusF from toCheck
+        G = vcat(F, GminusF)
+        push!(intermediateFlats, Flat(matroid(C), Set(G)))
+        toCheck = setdiff(toCheck, GminusF)
+    end
+
+    # Construct all maximal chains by inserting each intermediate flat
+    refinements = [chain_of_flats(matroid(C), insert!(copy(flats(C)), gapIndex, intermediateFlat)) for intermediateFlat in intermediateFlats]
+    return refinements
+end
+
+function maximal_refinements_general(C::ChainOfFlats)::Vector{ChainOfFlats}
     mat = matroid(C)
 
     # Augment the chain with the empty set and the ground set.

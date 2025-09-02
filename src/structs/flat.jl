@@ -165,3 +165,12 @@ function indicator_vector(flat::Flat)
     end
     return v
 end
+
+@doc raw"""
+    rank(F::Flat)
+
+Return the rank of the flat `F`.
+"""
+function rank(F::Flat)
+    return rank(matroid(F), elements(F))
+end
