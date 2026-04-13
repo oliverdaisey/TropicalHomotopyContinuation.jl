@@ -147,7 +147,7 @@ function find_tropical_point(polynomials::Vector{TropicalPolynomial}, M::Realisa
     equationsMatrix = vcat(R.(linearIdealMatrix), A)
 
     # right hand side of the equations is 0 for the matroid parts
-    b = zeros(R, nrows(equationsMatrix))
+    b = [zero(R) for _ in 1:nrows(equationsMatrix)]
     for i in 1:nrows(linearIdealMatrix)
         b[i] = R(0)
     end
@@ -167,14 +167,14 @@ function find_tropical_point(polynomials::Vector{TropicalPolynomial}, M::Realisa
 end
 
 function random_lift(nu::TropicalSemiringMap, a::TropicalSemiringElem=tropical_semiring(nu)(rand(Int8)))
-
     aInt = ZZ(a; preserve_ordering=true)
-    randomLift = rand(-999:999)*Oscar.uniformizer_field(nu)^aInt
+    R = Oscar.valued_field(nu)
+    u = R(Oscar.uniformizer(nu))
+    randomLift = rand(-999:999)*u^aInt
     while iszero(randomLift)
-        randomLift = rand(-999:999)*Oscar.uniformizer_field(nu)^aInt
+        randomLift = rand(-999:999)*u^aInt
     end
     return randomLift
-
 end
 
 @doc raw"""

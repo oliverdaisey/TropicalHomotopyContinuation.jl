@@ -141,7 +141,7 @@ function bergman_flip(T::Tracker, σ::MixedCell, tBergman::Height)
         # assemble and solve the combined affine linear system from the Bergman linear equations
         # and the jensen affine linear equations
         affineLinearEquationsLHS = vcat(bergmanConeSpanLinearEquations, jensenStarLinearEquationMatrix)
-        affineLinearEquationsRHS = vcat(zeros(QQ, nrows(bergmanConeSpanLinearEquations)), jensenStarAffineEquationsRHS)
+        affineLinearEquationsRHS = vcat(fill(zero(QQ), nrows(bergmanConeSpanLinearEquations)), jensenStarAffineEquationsRHS)
         canSolve, solution, kernelGenerators = Oscar.can_solve_with_solution_and_kernel(affineLinearEquationsLHS, affineLinearEquationsRHS; side=:right)
 
         # check whether the combined affine linear system has exactly one solution.

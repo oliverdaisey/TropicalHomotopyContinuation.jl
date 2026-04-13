@@ -263,7 +263,7 @@ function cone(C::ChainOfFlats)
     for (i, F) in enumerate(reducedFlats)
         F1, Frest = Iterators.peel(F)
         for Fj in Frest
-            equality = zeros(QQ, length(ground_set(matroid(C))))
+            equality = fill(zero(QQ), length(ground_set(matroid(C))))
             equality[F1] = 1
             equality[Fj] = -1
             push!(equalities, equality)
@@ -272,7 +272,7 @@ function cone(C::ChainOfFlats)
         for j in 1:(i-1)
             G = reducedFlats[j]
             for g in G
-                inequality = zeros(QQ, length(ground_set(matroid(C))))
+                inequality = fill(zero(QQ), length(ground_set(matroid(C))))
                 inequality[g] = -1
                 inequality[F1] = 1
                 push!(inequalities, inequality)
@@ -488,7 +488,7 @@ function tropical_equalities(C::ChainOfFlats)
     for F in reducedFlats
         F1, Frest = Iterators.peel(F)
         for Fj in Frest
-            equality = zeros(QQ, length(ground_set(matroid(C))))
+            equality = fill(zero(QQ), length(ground_set(matroid(C))))
             equality[F1] = 1
             equality[Fj] = -1
             push!(equalities, equality)
