@@ -14,6 +14,12 @@ struct ChainOfFlats
     flats::Vector{Flat}
 end
 
+function Base.hash(c::ChainOfFlats, h::UInt)
+    h = hash(c.matroid, h)
+    h = hash(c.flats, h)
+    return h
+end
+
 
 
 ###############################################################################
@@ -154,7 +160,7 @@ end
 Return the colength of the chain of flats `C`, i.e., the rank of its matroid minus its length.
 """
 function colength(C::ChainOfFlats)
-    return length(C) - rank(matroid(C)) + 1
+    return rank(matroid(C)) - length(C) - 1
 end
 
 @doc raw"""
@@ -329,6 +335,60 @@ A refinement is a chain that contains the original chain as a subsequence.
 Maximal chains are those that cannot be refined any further.
 """
 function maximal_refinements(C::ChainOfFlats)::Vector{ChainOfFlats}
+    if colength(C) == 0
+        return [C]
+    elseif colength(C) == 1 && matroid(C) isa RealisableMatroid
+        return maximal_refinements_colength_one_realisable(C)
+    end
+    return maximal_refinements_general(C)
+end
+
+function maximal_refinements_colength_one_realisable(C::ChainOfFlats)::Vector{ChainOfFlats}
+    mat = matroid(C)
+    full_chain = [empty_flat(mat); flats(C); ground_flat(mat)]
+
+    # Identify the single rank gap in the chain
+    gapIndex = 1
+    r = rank(full_chain[1])
+    for i in 2:length(full_chain)
+        rNext = rank(full_chain[i])
+        if rNext - r > 1
+            gapIndex = i - 1
+            break
+        end
+        r = rNext
+    end
+
+    F = collect(elements(full_chain[gapIndex]))
+    H = collect(elements(full_chain[gapIndex + 1]))
+
+    # Find intermediate flats: subsets G with F ⊊ G ⊊ H and rank(G) == rank(F) + 1
+    intermediateFlats = Flat[]
+    toCheck = setdiff(H, F)
+    M = matrix(mat)
+    rF = isempty(F) ? 0 : Oscar.rank(M[:, F])
+
+    while !isempty(toCheck)
+        x, toCheckRest = Iterators.peel(toCheck)
+
+        # Start with G \ F = {x} and successively add y that don't raise rank beyond rF+1
+        GminusF = [x]
+        for y in toCheckRest
+            if Oscar.rank(M[:, vcat(F, GminusF, y)]) == rF + 1
+                push!(GminusF, y)
+            end
+        end
+
+        G = vcat(F, GminusF)
+        push!(intermediateFlats, Flat(mat, Set(G)))
+        toCheck = setdiff(toCheck, GminusF)
+    end
+
+    # Construct all maximal chains by inserting each intermediate flat
+    return [chain_of_flats(mat, insert!(copy(flats(C)), gapIndex, f)) for f in intermediateFlats]
+end
+
+function maximal_refinements_general(C::ChainOfFlats)::Vector{ChainOfFlats}
     mat = matroid(C)
 
     # Augment the chain with the empty set and the ground set.
@@ -337,11 +397,15 @@ function maximal_refinements(C::ChainOfFlats)::Vector{ChainOfFlats}
     # Helper function: given two flats F and G (with F ⊂ G), return all flats F' with F ⊂ F' ⊂ G.
     function intermediate_flats(mat, F::Flat, G::Flat)::Vector{Flat}
         candidates = Set{Set{Int}}()
-        for e in setdiff(elements(G), elements(F))
+        gap = setdiff(elements(G), elements(F))
+        # Skip zero columns — they are absorbed into every closure and cannot generate distinct intermediates
+        if mat isa RealisableMatroid
+            gap = setdiff(gap, zero_columns(mat))
+        end
+        for e in gap
             # Compute the closure of F augmented by e.
             candidate = closure(mat, union(elements(F), [e]))
             # We want candidates strictly between F and G, and the candidate must be a flat.
-            # (Since candidate = closure(candidate) by construction, it is a flat.)
             if elements(F) ⊊ candidate && candidate ⊊ elements(G)
                 push!(candidates, Set(candidate))
             end

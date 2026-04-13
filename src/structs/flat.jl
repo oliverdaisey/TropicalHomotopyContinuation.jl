@@ -93,11 +93,18 @@ end
 Compute the closure of a set of elements in a realisable matroid.
 """
 function closure(M::RealisableMatroid, elems::Set{Int})
+    # Hoist rank out of the loop — it is invariant since we only add rank-preserving elements
+    base_rank = rank(M, elems)
 
-    # check if including any other element keeps the rank the same
-    for i in setdiff(ground_set(M), elems)
-        if rank(M, union(elems, Set{Int}([i]))) == rank(M, elems)
-            push!(elems, i)
+    # Zero columns are always in the closure (they never affect rank)
+    union!(elems, zero_columns(M))
+
+    # Only check non-zero columns
+    for i in nonzero_columns(M)
+        i in elems && continue
+        push!(elems, i)
+        if rank(M, elems) != base_rank
+            delete!(elems, i)
         end
     end
 
@@ -164,4 +171,13 @@ function indicator_vector(flat::Flat)
         v[i] = 1
     end
     return v
+end
+
+@doc raw"""
+    rank(F::Flat)
+
+Return the rank of the flat `F`.
+"""
+function rank(F::Flat)
+    return rank(matroid(F), elements(F))
 end

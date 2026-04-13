@@ -5,7 +5,10 @@ An interface to a realisable matroid that provides access to the realisation mat
 """
 struct RealisableMatroid
     realisationMatrix::MatElem{<:FieldElem}
-    rank::Int # cache the rank of the matroid
+    rank::Int
+    zeroColumns::Set{Int}
+    nonzeroColumns::Vector{Int}
+    rankCache::Dict{Vector{Int}, Int}
 end
 
 @doc raw"""
@@ -40,12 +43,44 @@ function Base.show(io::IO, M::RealisableMatroid)
 end
 
 @doc raw"""
+    zero_columns(M::RealisableMatroid)
+
+Return the set of column indices of `M` that are entirely zero.
+"""
+zero_columns(M::RealisableMatroid) = M.zeroColumns
+
+@doc raw"""
+    nonzero_columns(M::RealisableMatroid)
+
+Return the sorted vector of column indices of `M` that are not entirely zero.
+"""
+nonzero_columns(M::RealisableMatroid) = M.nonzeroColumns
+
+@doc raw"""
     matroid(A::MatElem{<:FieldElem})
 
 Construct a realisable matroid from the realisation matrix `A`.
 """
 function matroid(A::MatElem{<:FieldElem})
-    return RealisableMatroid(A, Oscar.rank(A))
+    r = Oscar.rank(A)
+    n = ncols(A)
+    zero_cols = Set{Int}()
+    nonzero_cols = Int[]
+    for j in 1:n
+        is_zero_col = true
+        for i in 1:nrows(A)
+            if !iszero(A[i, j])
+                is_zero_col = false
+                break
+            end
+        end
+        if is_zero_col
+            push!(zero_cols, j)
+        else
+            push!(nonzero_cols, j)
+        end
+    end
+    return RealisableMatroid(A, r, zero_cols, nonzero_cols, Dict{Vector{Int}, Int}())
 end
 
 function Base.convert(::Type{Matroid}, M::RealisableMatroid)
@@ -95,7 +130,18 @@ end
 Return the rank of the realisable matroid `M` restricted to the set `b`.
 """
 function rank(M::RealisableMatroid, b::Set{Int})
-    return Oscar.rank(matrix(M)[:, collect(b)])
+    # Filter out zero columns — they cannot contribute to rank
+    effective = sort!(collect(setdiff(b, M.zeroColumns)))
+    isempty(effective) && return 0
+
+    # Check cache
+    cached = get(M.rankCache, effective, nothing)
+    cached !== nothing && return cached
+
+    # Compute and cache
+    r = Oscar.rank(matrix(M)[:, effective])
+    M.rankCache[effective] = r
+    return r
 end
 
 @doc raw"""
