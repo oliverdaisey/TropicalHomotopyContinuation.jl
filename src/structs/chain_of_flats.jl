@@ -398,7 +398,7 @@ function maximal_refinements_general(C::ChainOfFlats)::Vector{ChainOfFlats}
     function intermediate_flats(mat, F::Flat, G::Flat)::Vector{Flat}
         candidates = Set{Set{Int}}()
         gap = setdiff(elements(G), elements(F))
-        # Skip zero columns — they are absorbed into every closure and cannot generate distinct intermediates
+        # Skip zero columns: they are absorbed into every closure and cannot generate distinct intermediates
         if mat isa RealisableMatroid
             gap = setdiff(gap, zero_columns(mat))
         end

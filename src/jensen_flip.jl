@@ -13,7 +13,10 @@ function compute_jensen_time(T::Tracker, σ::MixedCell; disable_cache::Bool = fa
     δ = combine(active_support(σ), hypersurfaceDuals)
     Δ = combine(ambient_support(T), hypersurfaceDuals)
 
-    C = mixed_cell_cone(δ, Δ)
+    # Reuse cached cone or compute and cache (circuits depend on points, not heights)
+    C = get!(T.jensenCones, σ) do
+        mixed_cell_cone(δ, Δ)
+    end
 
     if AbstractAlgebra.get_assertion_level(:TropicalHomotopyContinuationJensen)>0
         @assert Δ in C "The mixed cell being tracked is not in the mixed cell cone."
@@ -49,7 +52,9 @@ function jensen_flip(T::Tracker, σ::MixedCell, tJensen::Height)
 
     v = direction(T)
 
-    C = mixed_cell_cone(δ, Δ)
+    C = get!(T.jensenCones, σ) do
+        mixed_cell_cone(δ, Δ)
+    end
 
     if sum([dot(v, κ) * tJensen == -dot(Δ, κ) for κ in facets(C)]) != 1
         return MixedCell[] # a perturbation is required since we do not have a unique breaking facet
