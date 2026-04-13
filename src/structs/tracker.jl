@@ -394,10 +394,10 @@ function is_bergman_consistent(T::Tracker, σ::MixedCell)
 
     # check that we are inside the cone
     if length(equalities) > 0
-        @assert all([sum(w .* v) == 0 for v in equalities]) "The intersection point is not in the cone (equality violated)"
-        @assert all([sum(w .* v) <= 0 for v in inequalities]) "The intersection point is not in the cone (inequality violated) intersection point: $(w) chain of flats: $(chainOfFlats)"
+        @assert all([w[pos] - w[neg] == 0 for (pos, neg) in equalities]) "The intersection point is not in the cone (equality violated)"
+        @assert all([w[pos] - w[neg] <= 0 for (pos, neg) in inequalities]) "The intersection point is not in the cone (inequality violated) intersection point: $(w) chain of flats: $(chainOfFlats)"
     else
-        @assert all([sum(w .* v) <= 0 for v in inequalities]) "The intersection point is not in the cone"
+        @assert all([w[pos] - w[neg] <= 0 for (pos, neg) in inequalities]) "The intersection point is not in the cone"
     end
 
     return true
