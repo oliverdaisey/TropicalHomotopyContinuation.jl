@@ -105,7 +105,7 @@ function mixed_cell_cone(δ::MixedSupport, ambientSupport::MixedSupport)::MixedC
         newMixedSupport = mixed_support(δ, oldSupport, newSupport)
         pts = points(newMixedSupport)
         submatrix = cayleyEmbedding[newMixedSupport]
-        nontrivialEntries = Matrix(nullspace(Oscar.matrix(QQ, submatrix))[2])
+        nontrivialEntries = Matrix(nullspace(Oscar.matrix(ZZ, submatrix))[2])
 
         # choose sign so that the entry corresponding to p is negative
         if nontrivialEntries[findfirst(x -> x == p, pts)] > 0
