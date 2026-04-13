@@ -88,38 +88,39 @@ function mixed_cell_cone(δ::MixedSupport, ambientSupport::MixedSupport)::MixedC
     @assert length(δ) == length(ambientSupport) "Mixed cell candidate and ambient support must have the same number of supports."
     @assert is_subset(δ, ambientSupport) "Mixed cell candidate must be a subset of the ambient support."
 
-    cayleyEmbedding = cayley_embedding(ambientSupport)
+    # Compute the base Cayley matrix for delta and invert it once.
+    # For each extra point p, the circuit of [B | c_p] is proportional to [-B^{-1} c_p; 1],
+    # avoiding a full nullspace computation per point.
+    baseMatrix = matrix(δ)
+    B_qq = Oscar.matrix(QQ, baseMatrix)
+    _, Binv = Oscar.is_invertible_with_inverse(B_qq)
+
+    delta_pts = points(δ)
+    numSupports = length(supports(δ))
 
     facets = MixedCellConeFacet[]
 
     for p in points(ambientSupport)
-        if p in points(δ)
+        if p in delta_pts
             continue
         end
-        # for all points p not in ambient support, get submatrix of cayleyEmbedding indexed by mixed cell candidate and p
+
         index = findfirst(x -> p in x, supports(ambientSupport))
 
-        # take the support with index `index` and augment it with p
-        oldSupport = supports(δ)[index]
-        newSupport = support(oldSupport, p)
-        newMixedSupport = mixed_support(δ, oldSupport, newSupport)
-        pts = points(newMixedSupport)
-        submatrix = cayleyEmbedding[newMixedSupport]
-        nontrivialEntries = Matrix(nullspace(Oscar.matrix(ZZ, submatrix))[2])
+        # Build the Cayley column for p: [entries(p); e_index]
+        col = vcat(entries(p), [i == index ? 1 : 0 for i in 1:numSupports])
+        c_qq = Oscar.matrix(QQ, length(col), 1, col)
 
-        # choose sign so that the entry corresponding to p is negative
-        if nontrivialEntries[findfirst(x -> x == p, pts)] > 0
-            nontrivialEntries = -nontrivialEntries
-        end
+        # Circuit entries for delta points are -B^{-1} * c, and 1 for p
+        x = Binv * (-c_qq)
 
-        # circuit has enties all zero except for nontrivialEntries
         circuit = Dict{Point, Height}()
-        for point in points(δ)
-            circuit[point] = nontrivialEntries[findfirst(x -> x == point, pts)]
+        for (i, point) in enumerate(delta_pts)
+            circuit[point] = x[i, 1]
         end
-        circuit[p] = nontrivialEntries[findfirst(x -> x == p, pts)]
+        circuit[p] = QQ(1)
 
-        # final reality check
+        # Choose sign so that the entry corresponding to p is negative
         if circuit[p] > 0
             for pt in keys(circuit)
                 circuit[pt] = -circuit[pt]
