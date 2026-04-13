@@ -210,7 +210,7 @@ function tropical_polyhedra_spans_and_mults(σ::MixedCell)
     cols = Vector{QQFieldElem}[]
     push!(cols, indicator_vector.(full_flats(chain_of_flats(σ)))...)
     # remove all zero vector from cols
-    cols = [col for col in cols if col != zeros(QQ, length(col))]
+    cols = [col for col in cols if !iszero(col)]
     A = Oscar.matrix(QQ, cols)
 
 
