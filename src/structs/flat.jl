@@ -93,7 +93,7 @@ end
 Compute the closure of a set of elements in a realisable matroid.
 """
 function closure(M::RealisableMatroid, elems::Set{Int})
-    # Hoist rank out of the loop — it is invariant since we only add rank-preserving elements
+    # Hoist rank out of the loop: it is invariant since we only add rank-preserving elements
     base_rank = rank(M, elems)
 
     # Zero columns are always in the closure (they never affect rank)

@@ -9,6 +9,7 @@ mutable struct Tracker
     mixedCells::Vector{MixedCell}
     bergmanTimes::Dict{MixedCell, Height}
     jensenTimes::Dict{MixedCell, Height}
+    jensenCones::Dict{MixedCell, MixedCellCone}
     targets::Vector{MixedSupport}
     logger::Logger # logs data about the tracker
 
@@ -20,7 +21,7 @@ end
 Construct a tracker for a mixed cell.
 """
 function tracker(ambientSupport::MixedSupport, mixedCells::Vector{MixedCell}, targets::Vector{MixedSupport})::Tracker
-    T = Tracker(copy(ambientSupport), copy(mixedCells), Dict{MixedCell, Height}(), Dict{MixedCell, Height}(), copy(targets), logger())
+    T = Tracker(copy(ambientSupport), copy(mixedCells), Dict{MixedCell, Height}(), Dict{MixedCell, Height}(), Dict{MixedCell, MixedCellCone}(), copy(targets), logger())
     update_max_mixed_cells!(T, length(mixedCells))
     return T
 end
@@ -215,9 +216,9 @@ Remove the mixed cell `σ` from the tracker `T`.
 """
 function remove_mixed_cell!(T::Tracker, σ::MixedCell)
     T.mixedCells = setdiff(T.mixedCells, [σ])
-    # remove the mixed cell from the bergman and jensen times
     delete!(T.bergmanTimes, σ)
     delete!(T.jensenTimes, σ)
+    delete!(T.jensenCones, σ)
 end
 
 @doc raw"""
@@ -328,10 +329,11 @@ function rebase!(T::Tracker, Δ::MixedSupport)
         end
     end
 
-    # invalidate the cached times
+    # invalidate the cached times and cones (ambient points changed)
     for σ in mixed_cells(T)
         delete!(T.bergmanTimes, σ)
         delete!(T.jensenTimes, σ)
+        delete!(T.jensenCones, σ)
     end
 
     # remove the first target from the list of targets

@@ -130,7 +130,7 @@ end
 Return the rank of the realisable matroid `M` restricted to the set `b`.
 """
 function rank(M::RealisableMatroid, b::Set{Int})
-    # Filter out zero columns — they cannot contribute to rank
+    # Filter out zero columns, they cannot contribute to rank
     effective = sort!(collect(setdiff(b, M.zeroColumns)))
     isempty(effective) && return 0
 
