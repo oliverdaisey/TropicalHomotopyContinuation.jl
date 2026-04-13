@@ -262,39 +262,26 @@ function cone(C::ChainOfFlats)
 
     reducedFlats = reduced_flats(C)
 
-
-    equalities = Vector{QQFieldElem}[]
-    inequalities = Vector{QQFieldElem}[]
+    # Each equality/inequality has exactly two nonzero entries: +1 at pos and -1 at neg.
+    # Store as (pos, neg) pairs instead of dense vectors.
+    equalities = Tuple{Int,Int}[]
+    inequalities = Tuple{Int,Int}[]
 
     for (i, F) in enumerate(reducedFlats)
         F1, Frest = Iterators.peel(F)
         for Fj in Frest
-            equality = fill(zero(QQ), length(ground_set(matroid(C))))
-            equality[F1] = 1
-            equality[Fj] = -1
-            push!(equalities, equality)
+            push!(equalities, (F1, Fj))
         end
 
         for j in 1:(i-1)
             G = reducedFlats[j]
             for g in G
-                inequality = fill(zero(QQ), length(ground_set(matroid(C))))
-                inequality[g] = -1
-                inequality[F1] = 1
-                push!(inequalities, inequality)
+                push!(inequalities, (F1, g))
             end
         end
 
     end
 
-    # add all ones vector
-
-
-    # if length(equalities) == 0
-    #     return cone_from_inequalities(Oscar.matrix(QQ, inequalities))
-    # else
-    #     return cone_from_inequalities(Oscar.matrix(QQ, inequalities), Oscar.matrix(QQ, equalities))
-    # end
     return inequalities, equalities
 
 end
